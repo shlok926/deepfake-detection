@@ -1,4 +1,37 @@
-\## Results
+Results
+
+
+
+
+
+## Results Summary
+
+### Audio Preprocessing & Feature Extraction
+
+The audio pipeline was validated using a synthetic audio sample.
+
+- Sample rate: **16,000 Hz**
+- Audio length: ~62 seconds
+
+#### Extracted Features
+
+| Feature Type        | Shape (Features × Time) | Description |
+|--------------------|--------------------------|-------------|
+| Mel Spectrogram    | 128 × 1949               | Time–frequency representation used for CNN input |
+| MFCC               | 40 × 1949                | Compact cepstral features for comparison |
+
+
+
+<img width="1366" height="590" alt="image" src="https://github.com/user-attachments/assets/77d49380-8b9b-4a0d-86bd-f098f1bbe747" />
+
+
+These features confirm successful audio preprocessing and are directly used as input to the CNN-based audio deepfake detection model.
+
+
+
+### Visualization
+Mel Spectrogram and MFCC visualizations were generated to verify spectral patterns and feature quality.
+
 
 
 
