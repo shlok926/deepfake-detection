@@ -14,10 +14,6 @@ The multimodal approach improves robustness, as deepfake content may bypass sing
 
 
 
----
-
-
-
 \## 🚀 Key Features
 
 \- Video deepfake detection using CNN on face crops
@@ -29,10 +25,6 @@ The multimodal approach improves robustness, as deepfake content may bypass sing
 \- Evaluation using Accuracy, Precision, Recall, F1-score, and Confusion Matrix
 
 \- Future-ready design for social media fake account detection
-
-
-
----
 
 
 
@@ -60,19 +52,7 @@ Input Video
 
 → CNN (Audio Deepfake Detection)
 
-
-
 Final Output → Real / Fake
-
-
-
-yaml
-
-Copy code
-
-
-
----
 
 
 
@@ -114,32 +94,18 @@ deepfake-detection/
 
 
 
-yaml
-
-Copy code
-
-
-
----
-
-
-
 \## 📊 Dataset
 
 The project uses \*\*benchmark deepfake datasets\*\* with ground truth labels:
-
-
 
 \- \*\*FaceForensics++\*\*
 
 \- \*\*DFDC (DeepFake Detection Challenge – Kaggle)\*\*
 
 
-
 ⚠️ \*\*Note:\*\*  
 
 Raw videos and audio files are \*\*not included\*\* in this repository due to size, privacy, and copyright constraints.
-
 
 
 Please download the datasets separately and place them in:
@@ -150,18 +116,7 @@ data/raw\_videos/fake/
 
 
 
-yaml
-
-Copy code
-
-
-
----
-
-
-
 \## 🔍 Methodology
-
 
 
 \### 🔹 Video Pipeline
@@ -190,10 +145,6 @@ Copy code
 
 
 
----
-
-
-
 \## 📈 Evaluation Metrics
 
 The models are evaluated using:
@@ -209,12 +160,8 @@ The models are evaluated using:
 \- Confusion Matrix
 
 
-
 These metrics ensure balanced evaluation, especially important for deepfake detection where false positives and false negatives must be minimized.
 
-
-
----
 
 
 
@@ -232,10 +179,6 @@ These metrics ensure balanced evaluation, especially important for deepfake dete
 
 
 
----
-
-
-
 \## 🔮 Future Scope
 
 \- Social media fake account detection
@@ -250,15 +193,9 @@ These metrics ensure balanced evaluation, especially important for deepfake dete
 
 
 
----
-
-
-
 \## 🌐 Deployment
 
 The system can be deployed using \*\*Streamlit\*\* for real-time demonstration of deepfake detection.
-
-
 
 
 
