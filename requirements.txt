@@ -1,0 +1,13 @@
+numpy
+pandas
+opencv-python
+mtcnn
+tensorflow
+keras
+librosa
+noisereduce
+scikit-learn
+matplotlib
+seaborn
+streamlit
+ffmpeg-python
