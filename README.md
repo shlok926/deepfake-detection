@@ -1,20 +1,17 @@
-\# 🎭 Multimodal Deepfake Detection System
+ 🎭 Multimodal Deepfake Detection System
 
 
 
-\## 📌 Overview
+📌 Overview
 
 This project presents a \*\*Multimodal Deepfake Detection System\*\* that identifies fake or manipulated media by analyzing both \*\*video\*\* and \*\*audio\*\* content.  
-
 The system uses \*\*CNN-based models\*\* to detect visual deepfake artifacts from facial regions and synthetic voice patterns from audio signals.
-
-
-
 The multimodal approach improves robustness, as deepfake content may bypass single-modality detection.
 
 
 
-\## 🚀 Key Features
+
+🚀 Key Features
 
 \- Video deepfake detection using CNN on face crops
 
@@ -28,7 +25,8 @@ The multimodal approach improves robustness, as deepfake content may bypass sing
 
 
 
-\## 🧠 System Architecture
+
+🧠 System Architecture
 
 Input Video
 
@@ -56,7 +54,8 @@ Final Output → Real / Fake
 
 
 
-\## 📂 Project Structure
+
+📂 Project Structure
 
 deepfake-detection/
 
@@ -66,23 +65,17 @@ deepfake-detection/
 
 │ └── raw\_videos/ # (Not included – see note below)
 
-│
-
 ├── extracted\_frames/ # Generated during preprocessing
 
 ├── face\_crops/ # Face images for video CNN
 
 ├── audio\_data/ # Extracted audio files
 
-│
-
 ├── notebooks/ # Colab / Jupyter notebooks
 
 ├── models/ # Saved model files / architecture
 
 ├── app/ # Streamlit demo app
-
-│
 
 ├── results/ # Evaluation results
 
@@ -94,7 +87,9 @@ deepfake-detection/
 
 
 
-\## 📊 Dataset
+
+
+📊 Dataset
 
 The project uses \*\*benchmark deepfake datasets\*\* with ground truth labels:
 
@@ -103,10 +98,11 @@ The project uses \*\*benchmark deepfake datasets\*\* with ground truth labels:
 \- \*\*DFDC (DeepFake Detection Challenge – Kaggle)\*\*
 
 
-⚠️ \*\*Note:\*\*  
+
+
+⚠️Note:
 
 Raw videos and audio files are \*\*not included\*\* in this repository due to size, privacy, and copyright constraints.
-
 
 Please download the datasets separately and place them in:
 
@@ -116,10 +112,11 @@ data/raw\_videos/fake/
 
 
 
-\## 🔍 Methodology
+
+🔍 Methodology
 
 
-\### 🔹 Video Pipeline
+ 🔹 Video Pipeline
 
 \- Frame extraction using OpenCV
 
@@ -129,7 +126,8 @@ data/raw\_videos/fake/
 
 
 
-\### 🔹 Audio Pipeline
+
+🔹 Audio Pipeline
 
 \- Audio extraction using FFmpeg
 
@@ -145,7 +143,7 @@ data/raw\_videos/fake/
 
 
 
-\## 📈 Evaluation Metrics
+📈 Evaluation Metrics
 
 The models are evaluated using:
 
@@ -159,13 +157,13 @@ The models are evaluated using:
 
 \- Confusion Matrix
 
-
 These metrics ensure balanced evaluation, especially important for deepfake detection where false positives and false negatives must be minimized.
 
 
 
 
-\## 📊 Model Comparison
+
+📊 Model Comparison
 
 \- \*\*Video CNN\*\*: Detects facial texture and manipulation artifacts
 
@@ -179,7 +177,8 @@ These metrics ensure balanced evaluation, especially important for deepfake dete
 
 
 
-\## 🔮 Future Scope
+
+ 🔮 Future Scope
 
 \- Social media fake account detection
 
@@ -193,13 +192,16 @@ These metrics ensure balanced evaluation, especially important for deepfake dete
 
 
 
-\## 🌐 Deployment
+
+🌐 Deployment
 
 The system can be deployed using \*\*Streamlit\*\* for real-time demonstration of deepfake detection.
 
 
 
-\## 🎓 Academic \& Industry Relevance
+
+
+🎓 Academic \& Industry Relevance
 
 This project is relevant for:
 
