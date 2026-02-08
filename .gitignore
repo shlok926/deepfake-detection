@@ -1,0 +1,22 @@
+# ===== DATA (DO NOT PUSH) =====
+data/
+audio_data/
+extracted_frames/
+face_crops/
+test_images/
+
+# ===== MEDIA FILES =====
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.wav
+
+# ===== MODEL FILES =====
+*.h5
+*.keras
+*.pth
+*.pt
+
+# ===== CACHE =====
+__pycache__/
