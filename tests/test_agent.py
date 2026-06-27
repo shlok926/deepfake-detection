@@ -62,24 +62,36 @@ def test_agent_context_retrieval(mock_agent_env):
     assert context["metadata_summary"]["real_videos"] == 2
     assert context["metadata_summary"]["fake_videos"] == 1
 
-def test_agent_answering_offline(mock_agent_env):
+def test_agent_answering_offline(mock_agent_env, monkeypatch):
     agent = ForensicRAGAgent()
     
-    # 1. Performance query
+    # 1. Semantic Knowledge Base Query (matches KB)
+    ans_kb = agent.answer_query("What is a deepfake?")
+    assert "synthetic media" in ans_kb.lower()
+
+    # Disable KB vectors on this instance to isolate and verify dynamic file-based fallbacks
+    agent.question_vectors = None
+
+    # 2. Performance query
     ans_perf = agent.answer_query("What is the model accuracy?")
     assert "88.50%" in ans_perf
     assert "88.10%" in ans_perf  # F1 score
 
-    # 2. Stats query
+    # 3. Stats query
     ans_stats = agent.answer_query("How many real videos are there?")
     assert "3 total videos" in ans_stats
     assert "Real videos: 2" in ans_stats
 
-    # 3. Health query
+    # 4. Health query
     ans_health = agent.answer_query("Are there duplicates?")
     assert "duplicates: 4" in ans_health
 
-def test_agent_endpoint(mock_agent_env):
+def test_agent_endpoint(mock_agent_env, monkeypatch):
+    # We patch ForensicRAGAgent.__init__ to disable question_vectors globally during this endpoint test
+    def mock_init(self):
+        self.question_vectors = None
+    monkeypatch.setattr(ForensicRAGAgent, "__init__", mock_init)
+
     # Test POST request to FastAPI endpoint
     response = client.post(
         "/agent/query",
@@ -89,3 +101,8 @@ def test_agent_endpoint(mock_agent_env):
     data = response.json()
     assert data["success"] is True
     assert "88.50%" in data["answer"]
+
+
+
+
+

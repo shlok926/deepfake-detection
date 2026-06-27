@@ -4,6 +4,11 @@ import csv
 import logging
 from typing import Dict, Any, List
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+from app.agent.knowledge_base import KNOWLEDGE_BASE
+
 logger = logging.getLogger("system")
 
 class ForensicRAGAgent:
@@ -13,6 +18,7 @@ class ForensicRAGAgent:
     1. Dataset Health Report (storage/reports/dataset_deepfake_detection_health.md)
     2. Trained Model Metrics (results/metrics_summary.json)
     3. Video Metadata index (deepfake_detection/data/metadata.csv)
+    4. Offline Forensic QA Knowledge Base (~200 question-answer variations via TF-IDF semantic search)
     Synthesizes natural language explanations. Supports live LLM inference if keys are provided.
     """
     # Default paths for RAG retrieval sources
@@ -21,7 +27,21 @@ class ForensicRAGAgent:
     metadata_path = "deepfake_detection/data/metadata.csv"
 
     def __init__(self) -> None:
-        pass
+        # Build training set for TF-IDF Semantic search from local knowledge base
+        self.questions_list = []
+        self.answers_map = [] # maps question index to answer string
+        
+        for idx, entry in enumerate(KNOWLEDGE_BASE):
+            for question in entry["questions"]:
+                self.questions_list.append(question.lower())
+                self.answers_map.append(entry["answer"])
+                
+        # Fit TF-IDF Vectorizer
+        self.vectorizer = TfidfVectorizer(stop_words='english')
+        if len(self.questions_list) > 0:
+            self.question_vectors = self.vectorizer.fit_transform(self.questions_list)
+        else:
+            self.question_vectors = None
 
     def retrieve_context(self, query: str) -> Dict[str, Any]:
         """
@@ -87,20 +107,35 @@ class ForensicRAGAgent:
         Generates answer using retrieved context.
         Falls back to local NLP logic if LLM keys are absent, maintaining 100% offline robustness.
         """
-        context = self.retrieve_context(query)
-        q_lower = query.lower()
-
         # Check if Gemini/OpenAI API is available in environment
         # (This allows dynamic activation if user exports keys)
         gemini_key = os.getenv("GEMINI_API_KEY")
         openai_key = os.getenv("OPENAI_API_KEY")
+
+        context = self.retrieve_context(query)
 
         if gemini_key:
             return self._call_gemini_api(query, context, gemini_key)
         elif openai_key:
             return self._call_openai_api(query, context, openai_key)
 
-        # Local Hybrid NLP engine
+        # 1. Attempt Semantic Cosine Similarity match against Offline Knowledge Base
+        if self.question_vectors is not None:
+            try:
+                query_vector = self.vectorizer.transform([query.lower()])
+                similarities = cosine_similarity(query_vector, self.question_vectors).flatten()
+                best_idx = similarities.argmax()
+                best_score = similarities[best_idx]
+                
+                # If match score is high enough (threshold = 0.25), return curated answer
+                if best_score >= 0.25:
+                    logger.info(f"Agent matched query semantically with score {best_score:.4f} to idx {best_idx}")
+                    return self.answers_map[best_idx]
+            except Exception as e:
+                logger.error(f"Agent offline similarity matching failed: {e}")
+
+        # 2. Local Fallback Hybrid NLP engine (dynamic report parser)
+        q_lower = query.lower()
         if "accuracy" in q_lower or "performance" in q_lower or "f1" in q_lower or "auc" in q_lower:
             m = context.get("metrics")
             if m:
@@ -134,7 +169,7 @@ class ForensicRAGAgent:
                 )
             return "The dataset report indicates no major corruption issues, all files are healthy and sorted."
 
-        # Default fallback
+        # 3. Default fallback
         return (
             "Hello! I am your Forensic RAG Agent. You can query me regarding:\n"
             "- Dataset statistics (e.g. 'How many real videos are there?')\n"
