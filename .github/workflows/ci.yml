@@ -30,7 +30,7 @@ jobs:
       run: isort --check-only app/ ai_engine/
 
     - name: Static Lint Verification (Flake8)
-      run: flake8 app/ ai_engine/ --max-line-length=120 --ignore=E203,W503
+      run: flake8 app/ ai_engine/
 
   unit-testing:
     runs-on: ubuntu-latest
