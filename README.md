@@ -1,223 +1,96 @@
- 🎭 Multimodal Deepfake Detection System
+# 🎭 AI Digital Media Forensics & Deepfake Verification Platform
 
+An enterprise-grade, research-level AI Digital Media Forensics Platform designed to verify and audit digital content. It features multimodal verification modules (Video CNN + Audio CNN) with comprehensive explainability layers, and scales to high-throughput containerized environments.
 
+---
 
-📌 Overview
+## 🏛️ Platform Architecture Overview
 
-This project presents a \*\*Multimodal Deepfake Detection System\*\* that identifies fake or manipulated media by analyzing both \*\*video\*\* and \*\*audio\*\* content.  
-The system uses \*\*CNN-based models\*\* to detect visual deepfake artifacts from facial regions and synthetic voice patterns from audio signals.
-The multimodal approach improves robustness, as deepfake content may bypass single-modality detection.
+```mermaid
+graph TD
+    Client[Web UI / Browser Extension / API Clients] -->|HTTPS Requests| Gateway[FastAPI Enterprise Layer]
+    Gateway -->|Security Middleware| Auth[JWT & Payload Security Checks]
+    Gateway -->|Database Ops| DB[(SQL Database / MongoDB Cache)]
+    Gateway -->|Task Handlers| AI[AI Digital Media Forensics Engine]
+    
+    subgraph AI Engine [AI Digital Media Forensics Engine]
+        direction TB
+        V[Video Forensics: ResNet-18 Face CNN]
+        A[Audio Forensics: Mel-Spectrogram 2D CNN]
+        M[Metadata Auditing Module]
+        X[Explainable AI Layer: Grad-CAM / Visual Heatmaps]
+        
+        V --> Fusion[Late Fusion Classifier]
+        A --> Fusion
+        M --> Fusion
+        Fusion --> Predict[Forensic Report API]
+    end
+    
+    Gateway -->|Prometheus Metrics| Monitor[Grafana / Prometheus Dashboard]
+```
 
+---
 
+## 📚 Documentation Center
 
+To learn about specific parts of the platform infrastructure, refer to these sub-documents:
 
-🚀 Key Features
+1.  **[System Architecture & Design Patterns (docs/ARCHITECTURE.md)](file:///d:/Downloads/deepfake-detection-main/docs/ARCHITECTURE.md)**: Deep dive into the Bounded Contexts, Bounded Domain schemas, Clean Architecture design, and Late Fusion algorithm specs.
+2.  **[Installation & Local/Docker Setup (docs/INSTALLATION.md)](file:///d:/Downloads/deepfake-detection-main/docs/INSTALLATION.md)**: Detailed configuration guides for setting up virtual environments, installing FFmpeg, and running CPU/GPU Docker Swarms with Grafana telemetry.
+3.  **[Developer Guide & Code Standards (docs/DEVELOPER_GUIDE.md)](file:///d:/Downloads/deepfake-detection-main/docs/DEVELOPER_GUIDE.md)**: Code formatting rules, auto-format commands (`make format`), and a step-by-step tutorial on registering new deep learning models.
+4.  **[Production Readiness & Security (docs/PRODUCTION_READINESS.md)](file:///d:/Downloads/deepfake-detection-main/docs/PRODUCTION_READINESS.md)**: Security validations checklist, horizontal auto-scaling design, and the long-term project development roadmap.
 
-\- Video deepfake detection using CNN on face crops
+---
 
-\- Audio deepfake detection using Mel Spectrogram and MFCC features
+## 📂 Project Structure
 
-\- Multimodal architecture (audio + video)
-
-\- Evaluation using Accuracy, Precision, Recall, F1-score, and Confusion Matrix
-
-\- Future-ready design for social media fake account detection
-
-
-
-
-🧠 System Architecture
-
-Input Video
-
-|
-
-|--> Video Stream
-
-| → Frame Extraction (OpenCV)
-
-| → Face Detection (MTCNN / Haar)
-
-| → CNN (Video Deepfake Detection)
-
-|
-
-|--> Audio Stream
-
-→ Audio Extraction (FFmpeg)
-
-→ Mel Spectrogram / MFCC
-
-→ CNN (Audio Deepfake Detection)
-
-Final Output → Real / Fake
-
-
-
-
-📂 Project Structure
-
-deepfake-detection/
-
+```
+deepfake-forensics-platform/
+├── app/                        # Main Web Application & API Gateways
+│   ├── api/                    # API sub-versions
+│   ├── authentication/         # JWT validations & User Roles configurations
+│   ├── middleware/             # CORS policies & Upload Size Security Middleware
+│   ├── routes/                 # FastAPI controllers (/upload, /predict, /health, etc.)
+│   ├── database/               # SQL Connection managers and SQLAlchemy schemas
+│   ├── schemas/                # Request & Response data validation contracts (Pydantic v2)
+│   ├── utils/                  # Centralized logging, bootstrap engines, and custom exception handler mapping
+│   ├── config/                 # Pydantic Settings loaders for Dev, Testing, and Production
+│   └── main.py                 # ASGI Master Application bootstrap entry point
 │
-
-├── data/
-
-│ └── raw\_videos/ # (Not included – see note below)
-
-├── extracted\_frames/ # Generated during preprocessing
-
-├── face\_crops/ # Face images for video CNN
-
-├── audio\_data/ # Extracted audio files
-
-├── notebooks/ # Colab / Jupyter notebooks
-
-├── models/ # Saved model files / architecture
-
-├── app/ # Streamlit demo app
-
-├── results/ # Evaluation results
-
-├── README.md
-
-├── requirements.txt
-
-└── .gitignore
-
-
-
-
-
-📊 Dataset
-
-The project uses \*\*benchmark deepfake datasets\*\* with ground truth labels:
-
-\- \*\*FaceForensics++\*\*
-
-\- \*\*DFDC (DeepFake Detection Challenge – Kaggle)\*\*
-
-
-
-
-⚠️Note:
-
-Raw videos and audio files are \*\*not included\*\* in this repository due to size, privacy, and copyright constraints.
-
-Please download the datasets separately and place them in:
-
-data/raw\_videos/real/
-
-data/raw\_videos/fake/
-
-
-
-
-🔍 Methodology
-
-
- 🔹 Video Pipeline
-
-\- Frame extraction using OpenCV
-
-\- Face detection and cropping using MTCNN (Haar Cascade as fallback)
-
-\- CNN-based classification to detect visual manipulation artifacts
-
-
-
-
-🔹 Audio Pipeline
-
-\- Audio extraction using FFmpeg
-
-\- Optional noise reduction
-
-\- Feature extraction using:
-
-&nbsp; - Mel Spectrogram
-
-&nbsp; - MFCC
-
-\- CNN-based classification for synthetic voice detection
-
-
-
-📈 Evaluation Metrics
-
-The models are evaluated using:
-
-\- Accuracy
-
-\- Precision
-
-\- Recall
-
-\- F1-score
-
-\- Confusion Matrix
-
-These metrics ensure balanced evaluation, especially important for deepfake detection where false positives and false negatives must be minimized.
-
-
-
-
-
-📊 Model Comparison
-
-\- \*\*Video CNN\*\*: Detects facial texture and manipulation artifacts
-
-\- \*\*Audio CNN\*\*: Detects spectral inconsistencies in synthetic speech
-
-\- \*\*Mel Spectrogram vs MFCC\*\*:  
-
-&nbsp; Mel spectrograms perform better for CNN-based classification due to richer time–frequency representation
-
-\- \*\*Multimodal Approach\*\*: Improves robustness by combining both modalities
-
-
-
-
- 🔮 Future Scope
-
-\- Social media fake account detection
-
-\- Real-time deepfake detection
-
-\- Behavioral and metadata analysis
-
-\- Temporal models (LSTM / Transformers)
-
-\- Web and mobile deployment
-
-
-
-
-🌐 Deployment
-
-The system can be deployed using \*\*Streamlit\*\* for real-time demonstration of deepfake detection.
-
-
-
-
-
-🎓 Academic \& Industry Relevance
-
-This project is relevant for:
-
-\- Social media moderation
-
-\- Digital forensics
-
-\- Cybersecurity and misinformation control
-
-\- AI-based content authentication
-
-
-
-
-
-\## 📜 License
-
-This project is intended for \*\*academic and research purposes only\*\*.
-
+├── ai_engine/                  # Deep learning forensics algorithms and pipelines
+│   ├── video/                  # Facial CNN feature extraction routines
+│   ├── audio/                  # Mel Spectrogram analysis operations
+│   ├── metadata/               # EXIF/JFIF and audio container metadata parsing
+│   ├── explainability/         # Heatmap generation and attribution models (e.g., Grad-CAM)
+│   ├── fusion/                 # Multimodal classifier fusion algorithms
+│   ├── preprocessing/          # OpenCV frame slice & Librosa wave decoders
+│   ├── feature_extraction/     # Embedding processors for downstream classifiers
+│   ├── training/               # Distributed model training parameters
+│   ├── inference/              # Inference runner under CUDA contexts
+│   ├── evaluation/             # Metrics collectors (Precision/Recall, F1)
+│   └── datasets/               # Benchmark dataset registration schemas (Registry configuration)
+│
+├── storage/                    # Physical persistence layer
+│   ├── uploads/                # Temporary user uploads buffer
+│   ├── reports/                # Output PDF/JSON forensic audits
+│   └── dataset_cache/          # Cache for downloaded raw files
+│
+├── monitoring/                 # Monitoring configurations
+│   ├── prometheus/             # Scraping configurations for Prometheus server
+│   └── grafana/                # Dashboards for telemetry
+│
+├── tests/                      # Pytest suites
+└── Dockerfile                  # Multi-stage production container
+```
+
+---
+
+## 🚀 Quick Start
+To immediately build and spin up the complete API platform integrated with Prometheus metrics scraping and Grafana dashboard:
+```bash
+docker-compose up --build -d
+```
+*   **FastAPI API Endpoint**: [http://localhost:8000](http://localhost:8000)
+*   **Interactive Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+*   **Prometheus Console**: [http://localhost:9090](http://localhost:9090)
+*   **Grafana Dashboard**: [http://localhost:3000](http://localhost:3000)

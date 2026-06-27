@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # 1. Main Forensics API Service
+  forensics-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: forensics-api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+      - DEBUG=False
+      - DATABASE_URL=sqlite:///./storage/forensics.db
+      - PROMETHEUS_METRICS_ENABLED=True
+    volumes:
+      - forensics_storage:/app/storage
+      - forensics_logs:/app/logs
+    # Enable NVIDIA GPU passthrough if nvidia-container-toolkit is installed on host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # 2. Prometheus Metrics Aggregator
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: metrics-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    depends_on:
+      - forensics-api
+
+  # 3. Grafana Monitoring Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: metrics-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin-secure-pass
+    volumes:
+      - ./monitoring/grafana:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  forensics_storage:
+  forensics_logs:
+  prometheus_data:

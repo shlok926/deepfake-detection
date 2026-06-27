@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepfake-forensics-platform"
+version = "1.0.0"
+description = "Enterprise AI Digital Media Forensics Platform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Senior AI Forensics Architect" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.28.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "sqlalchemy>=2.0.25",
+    "pyjwt>=2.8.0",
+    "prometheus-client>=0.20.0",
+    "torch>=2.2.0",
+    "torchvision>=0.17.0",
+    "torchaudio>=2.2.0",
+    "opencv-python>=4.9.0",
+    "librosa>=0.10.1",
+    "facenet-pytorch>=2.5.3",
+    "mtcnn>=0.1.1",
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+    "matplotlib>=3.8.3",
+    "seaborn>=0.13.2",
+    "scikit-learn>=1.4.1",
+    "ffmpeg-python>=0.2.0",
+    "moviepy>=1.0.3",
+    "python-multipart>=0.0.9"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.2.0",
+    "isort>=5.13.2",
+    "mypy>=1.8.0",
+    "flake8>=7.0.0",
+    "pre-commit>=3.6.2",
+    "pytest>=8.0.2",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.27.0"
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "--cov=app --cov=ai_engine --cov-report=term-missing"
