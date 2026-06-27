@@ -68,3 +68,7 @@ htmlcov/
 # System Files
 .DS_Store
 Thumbs.db
+
+# Local dataset binaries ignore
+deepfake_detection/
+!deepfake_detection/data/metadata.csv

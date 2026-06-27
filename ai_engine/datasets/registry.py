@@ -301,6 +301,35 @@ class DatasetRegistry:
                     audio_features_dir="storage/datasets/wilddeepfake/audio_data",
                     metadata_csv_path="storage/datasets/wilddeepfake/metadata.csv"
                 )
+            },
+            {
+                "id": "deepfake_detection",
+                "meta": DatasetMetadata(
+                    name="Deepfake Detection Local Dataset",
+                    version="1.0",
+                    release_year=2026,
+                    modality="video",
+                    total_samples=32,
+                    real_samples=17,
+                    fake_samples=15,
+                    file_size_gb=0.1,
+                    description="Local Deepfake Detection benchmark dataset.",
+                    download_source="Local Workspace",
+                    labels=["real", "fake"],
+                    classes=["real", "fake"],
+                    expected_folder_structure={
+                        "real_videos": "real/",
+                        "fake_videos": "fake/"
+                    },
+                    citation="Local Dataset"
+                ),
+                "config": DatasetConfig(
+                    dataset_id="deepfake_detection",
+                    raw_video_dir="deepfake_detection/data/raw_videos",
+                    processed_faces_dir="deepfake_detection/face_crops",
+                    audio_features_dir="deepfake_detection/audio_data",
+                    metadata_csv_path="deepfake_detection/data/metadata.csv"
+                )
             }
         ]
         
