@@ -1,12 +1,14 @@
-import os
 import csv
-import shutil
-import random
 import logging
-from typing import Dict, Any, List, Optional
-from ai_engine.datasets.registry import DatasetRegistry, DatasetConfig
+import os
+import random
+import shutil
+from typing import Any, Dict, List, Optional
+
+from ai_engine.datasets.registry import DatasetConfig, DatasetRegistry
 
 logger = logging.getLogger("system")
+
 
 class DatasetNormalizer:
     """
@@ -22,6 +24,7 @@ class DatasetNormalizer:
       ├── validation/
       └── test/
     """
+
     def __init__(self, registry: Optional[DatasetRegistry] = None) -> None:
         self.registry = registry or DatasetRegistry()
 
@@ -32,7 +35,7 @@ class DatasetNormalizer:
         """
         if os.path.exists(dest_path):
             os.remove(dest_path)
-            
+
         try:
             # Attempt Symlink creation
             os.symlink(os.path.abspath(source_path), dest_path)
@@ -50,13 +53,13 @@ class DatasetNormalizer:
         """
         cfg = self.registry.get_config(dataset_id)
         meta = self.registry.get_metadata(dataset_id)
-        
+
         if not cfg or not meta:
             return {"success": False, "error": f"Dataset '{dataset_id}' not found in registry."}
 
         # Setup paths
         out_root = custom_output_dir or f"storage/datasets/{dataset_id}_normalized"
-        
+
         real_dir = os.path.join(out_root, "real")
         fake_dir = os.path.join(out_root, "fake")
         meta_dir = os.path.join(out_root, "metadata")
@@ -102,7 +105,7 @@ class DatasetNormalizer:
         splits_mapping = [
             ("train", train_rows, train_dir),
             ("validation", val_rows, val_dir),
-            ("test", test_rows, test_dir)
+            ("test", test_rows, test_dir),
         ]
 
         normalized_report = {
@@ -111,21 +114,21 @@ class DatasetNormalizer:
             "train_samples": len(train_rows),
             "validation_samples": len(val_rows),
             "test_samples": len(test_rows),
-            "linked_files": 0
+            "linked_files": 0,
         }
 
         # 3. Process each split and copy/link files
         for split_name, split_rows, split_target_dir in splits_mapping:
             split_csv_path = os.path.join(meta_dir, f"{split_name}.csv")
-            
+
             with open(split_csv_path, mode="w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 writer.writerow(["original_path", "normalized_path", "label"])
-                
+
                 for item in split_rows:
                     rel_path = item["video_path"]
-                    label = item["label"] # 'real' or 'fake'
-                    
+                    label = item["label"]  # 'real' or 'fake'
+
                     src_abs = os.path.join(cfg.raw_video_dir, rel_path)
                     if not os.path.exists(src_abs):
                         # Skip missing files, but warn
@@ -133,18 +136,18 @@ class DatasetNormalizer:
                         continue
 
                     filename = os.path.basename(rel_path)
-                    
+
                     # Target path in either real/ or fake/ folder
                     class_folder = real_dir if label == "real" else fake_dir
                     class_dest = os.path.join(class_folder, filename)
-                    
+
                     # Link to class folder
                     self._create_link_or_copy(src_abs, class_dest)
-                    
+
                     # Link to split folder (train/validation/test)
                     split_dest = os.path.join(split_target_dir, filename)
                     self._create_link_or_copy(src_abs, split_dest)
-                    
+
                     # Record row in split metadata CSV
                     writer.writerow([rel_path, os.path.join(split_name, filename), label])
                     normalized_report["linked_files"] += 1

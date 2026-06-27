@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 
 class BaseDatasetParser(ABC):
     """
@@ -8,9 +9,10 @@ class BaseDatasetParser(ABC):
     1. Implementing a subclass of BaseDatasetParser to map custom raw metadata files (JSON, TXT, XML)
        into standard list layout: [{"video_path": "...", "label": "real/fake"}]
     2. Registering the dataset metadata and directory config in the DatasetRegistry class.
-    
+
     No core preprocessing or model inference code needs to be modified.
     """
+
     @abstractmethod
     def parse_metadata(self, raw_dataset_dir: str) -> List[Dict[str, str]]:
         """

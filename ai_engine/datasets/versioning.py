@@ -1,18 +1,21 @@
-import os
 import json
 import logging
+import os
 import re
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from ai_engine.datasets.registry import DatasetRegistry
 
 logger = logging.getLogger("system")
+
 
 class DatasetVersionManager:
     """
     Manages reproducible, immutable versions of preprocessed and normalized datasets.
     Automatically increments version IDs (v1, v2, v3...) and dumps detailed execution metadata.
     """
+
     def __init__(self, registry: Optional[DatasetRegistry] = None) -> None:
         self.registry = registry or DatasetRegistry()
 
@@ -23,20 +26,20 @@ class DatasetVersionManager:
         """
         if not os.path.exists(versions_root):
             return "v0"
-            
+
         folders = os.listdir(versions_root)
         version_dirs = [f for f in folders if os.path.isdir(os.path.join(versions_root, f))]
-        
+
         highest_num = 0
         pattern = re.compile(r"^v(\d+)$")
-        
+
         for folder in version_dirs:
             match = pattern.match(folder)
             if match:
                 num = int(match.group(1))
                 if num > highest_num:
                     highest_num = num
-                    
+
         return f"v{highest_num}"
 
     def increment_version(self, current_version: str) -> str:
@@ -50,11 +53,11 @@ class DatasetVersionManager:
         return f"v{num + 1}"
 
     def create_versioned_archive(
-        self, 
-        dataset_id: str, 
-        source_normalized_dir: str, 
+        self,
+        dataset_id: str,
+        source_normalized_dir: str,
         preprocessing_config: Dict[str, Any],
-        versions_root: Optional[str] = None
+        versions_root: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Clones a normalized dataset split structure into an immutable, versioned folder path
@@ -62,7 +65,7 @@ class DatasetVersionManager:
         """
         cfg = self.registry.get_config(dataset_id)
         meta = self.registry.get_metadata(dataset_id)
-        
+
         if not cfg or not meta:
             return {"success": False, "error": f"Dataset '{dataset_id}' not found in registry."}
 
@@ -77,35 +80,29 @@ class DatasetVersionManager:
 
         # 2. Copy/Link normalized structure to version folder
         try:
-            # We copy tree. On Windows/Linux symlink contents are copied, but using copytree 
+            # We copy tree. On Windows/Linux symlink contents are copied, but using copytree
             # with symlinks=True preserves the references so we don't duplicate files!
             shutil_symlinks_param = True
             # Check if shutil.copytree is supported with symlinks (always True in modern Py)
             shutil_copy = True
             import shutil
+
             shutil.copytree(source_normalized_dir, version_dest_path, symlinks=shutil_symlinks_param)
         except Exception as e:
-            return {
-                "success": False, 
-                "error": f"Failed cloning normalized source folder to version {next_ver}: {e}"
-            }
+            return {"success": False, "error": f"Failed cloning normalized source folder to version {next_ver}: {e}"}
 
         # 3. Compile reproducible version metadata
         version_meta = {
             "version_id": next_ver,
             "dataset_id": dataset_id,
             "created_at": datetime.utcnow().isoformat(),
-            "base_dataset_info": {
-                "name": meta.name,
-                "version": meta.version,
-                "modality": meta.modality
-            },
+            "base_dataset_info": {"name": meta.name, "version": meta.version, "modality": meta.modality},
             "preprocessing_parameters": preprocessing_config,
             "reproducibility": {
                 "validation_split": cfg.validation_split,
                 "test_split": cfg.test_split,
-                "random_seed": 42
-            }
+                "random_seed": 42,
+            },
         }
 
         # Dump JSON metadata to the version folder
@@ -117,9 +114,4 @@ class DatasetVersionManager:
             logger.error(f"Failed writing version metadata: {e}")
             # Non-blocking error, since copy succeeded
 
-        return {
-            "success": True,
-            "version_id": next_ver,
-            "directory": version_dest_path,
-            "metadata": version_meta
-        }
+        return {"success": True, "version_id": next_ver, "directory": version_dest_path, "metadata": version_meta}

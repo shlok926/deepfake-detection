@@ -1,17 +1,20 @@
 import os
-import pandas as pd
-import numpy as np
-import torch
-from torch.utils.data import Dataset
-from PIL import Image
-import torchvision.transforms as T
 from typing import Tuple
+
+import numpy as np
+import pandas as pd
+import torch
+import torchvision.transforms as T
+from PIL import Image
+from torch.utils.data import Dataset
+
 
 class MultimodalForensicsDataset(Dataset):
     """
     PyTorch Dataset loader for multimodal deepfake detection.
     Aligns cropped face frame images with corresponding audio log-Mel spectrogram arrays.
     """
+
     def __init__(self, csv_path: str, transform=None, split: str = "train") -> None:
         if not os.path.exists(csv_path):
             raise FileNotFoundError(f"Processed dataset index CSV not found: {csv_path}")
@@ -24,20 +27,24 @@ class MultimodalForensicsDataset(Dataset):
             self.transform = transform
         else:
             if self.split == "train":
-                self.transform = T.Compose([
-                    T.Resize((224, 224)),
-                    T.RandomHorizontalFlip(p=0.5),
-                    T.RandomRotation(degrees=15),
-                    T.ColorJitter(brightness=0.2, contrast=0.2),
-                    T.ToTensor(),
-                    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                ])
+                self.transform = T.Compose(
+                    [
+                        T.Resize((224, 224)),
+                        T.RandomHorizontalFlip(p=0.5),
+                        T.RandomRotation(degrees=15),
+                        T.ColorJitter(brightness=0.2, contrast=0.2),
+                        T.ToTensor(),
+                        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    ]
+                )
             else:
-                self.transform = T.Compose([
-                    T.Resize((224, 224)),
-                    T.ToTensor(),
-                    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-                ])
+                self.transform = T.Compose(
+                    [
+                        T.Resize((224, 224)),
+                        T.ToTensor(),
+                        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    ]
+                )
 
     def __len__(self) -> int:
         return len(self.df)

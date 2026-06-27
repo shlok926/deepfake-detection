@@ -1,11 +1,13 @@
-import os
 import csv
-import random
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+import os
+import random
+from typing import Any, Dict, List, Optional, Tuple
+
 from ai_engine.datasets.registry import DatasetRegistry
 
 logger = logging.getLogger("system")
+
 
 class DatasetSplitter:
     """
@@ -13,19 +15,16 @@ class DatasetSplitter:
     Guarantees class stratification (preserves real/fake balance in each split)
     using configurable random seeds.
     """
+
     def __init__(self, registry: Optional[DatasetRegistry] = None) -> None:
         self.registry = registry or DatasetRegistry()
 
-    def get_stratified_splits(
-        self, 
-        dataset_id: str, 
-        random_seed: int = 42
-    ) -> Dict[str, List[Dict[str, str]]]:
+    def get_stratified_splits(self, dataset_id: str, random_seed: int = 42) -> Dict[str, List[Dict[str, str]]]:
         """
         Loads metadata CSV and returns a dictionary with stratified 'train', 'validation', and 'test' rows.
         """
         cfg = self.registry.get_config(dataset_id)
-        
+
         if not cfg:
             raise ValueError(f"Dataset '{dataset_id}' not found in registry config.")
 
@@ -38,10 +37,7 @@ class DatasetSplitter:
             reader = csv.DictReader(f)
             for r in reader:
                 if r.get("video_path") and r.get("label"):
-                    rows.append({
-                        "video_path": r["video_path"],
-                        "label": r["label"]
-                    })
+                    rows.append({"video_path": r["video_path"], "label": r["label"]})
 
         if not rows:
             raise ValueError("No valid rows found in metadata CSV for splitting.")
@@ -63,7 +59,7 @@ class DatasetSplitter:
         for lbl, lbl_rows in groups.items():
             # Shuffle items inside the class group
             rng.shuffle(lbl_rows)
-            
+
             total_lbl = len(lbl_rows)
             val_count = int(total_lbl * cfg.validation_split)
             test_count = int(total_lbl * cfg.test_split)
@@ -79,18 +75,9 @@ class DatasetSplitter:
         rng.shuffle(val_set)
         rng.shuffle(test_set)
 
-        return {
-            "train": train_set,
-            "validation": val_set,
-            "test": test_set
-        }
+        return {"train": train_set, "validation": val_set, "test": test_set}
 
-    def write_splits(
-        self, 
-        dataset_id: str, 
-        output_metadata_dir: str, 
-        random_seed: int = 42
-    ) -> Dict[str, Any]:
+    def write_splits(self, dataset_id: str, output_metadata_dir: str, random_seed: int = 42) -> Dict[str, Any]:
         """
         Retrieves stratified splits and saves them as train.csv, validation.csv, and test.csv.
         """
@@ -103,7 +90,7 @@ class DatasetSplitter:
             "train_count": len(splits["train"]),
             "validation_count": len(splits["validation"]),
             "test_count": len(splits["test"]),
-            "files_written": {}
+            "files_written": {},
         }
 
         for split_name, rows in splits.items():
@@ -113,7 +100,7 @@ class DatasetSplitter:
                 writer.writerow(["video_path", "label"])
                 for r in rows:
                     writer.writerow([r["video_path"], r["label"]])
-            
+
             report["files_written"][split_name] = split_filepath
 
         return report

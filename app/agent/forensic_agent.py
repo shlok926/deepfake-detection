@@ -1,8 +1,8 @@
-import os
-import json
 import csv
+import json
 import logging
-from typing import Dict, Any, List
+import os
+from typing import Any, Dict, List
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from app.agent.knowledge_base import KNOWLEDGE_BASE
 
 logger = logging.getLogger("system")
+
 
 class ForensicRAGAgent:
     """
@@ -21,6 +22,7 @@ class ForensicRAGAgent:
     4. Offline Forensic QA Knowledge Base (~200 question-answer variations via TF-IDF semantic search)
     Synthesizes natural language explanations. Supports live LLM inference if keys are provided.
     """
+
     # Default paths for RAG retrieval sources
     health_report_path = "storage/reports/dataset_deepfake_detection_health.md"
     metrics_path = "results/metrics_summary.json"
@@ -29,15 +31,15 @@ class ForensicRAGAgent:
     def __init__(self) -> None:
         # Build training set for TF-IDF Semantic search from local knowledge base
         self.questions_list = []
-        self.answers_map = [] # maps question index to answer string
-        
+        self.answers_map = []  # maps question index to answer string
+
         for idx, entry in enumerate(KNOWLEDGE_BASE):
             for question in entry["questions"]:
                 self.questions_list.append(question.lower())
                 self.answers_map.append(entry["answer"])
-                
+
         # Fit TF-IDF Vectorizer
-        self.vectorizer = TfidfVectorizer(stop_words='english')
+        self.vectorizer = TfidfVectorizer(stop_words="english")
         if len(self.questions_list) > 0:
             self.question_vectors = self.vectorizer.fit_transform(self.questions_list)
         else:
@@ -47,12 +49,7 @@ class ForensicRAGAgent:
         """
         Retrieves relevant structured and unstructured context based on search terms.
         """
-        context = {
-            "dataset_health": None,
-            "metrics": None,
-            "metadata_summary": None,
-            "relevant_snippets": []
-        }
+        context = {"dataset_health": None, "metrics": None, "metadata_summary": None, "relevant_snippets": []}
 
         # 1. Load Metrics Summary
         if os.path.exists(self.metrics_path):
@@ -77,7 +74,7 @@ class ForensicRAGAgent:
                 context["metadata_summary"] = {
                     "total_videos": real_count + fake_count,
                     "real_videos": real_count,
-                    "fake_videos": fake_count
+                    "fake_videos": fake_count,
                 }
             except Exception as e:
                 logger.error(f"Agent failed to load metadata: {e}")
@@ -87,7 +84,7 @@ class ForensicRAGAgent:
             try:
                 with open(self.health_report_path, "r", encoding="utf-8") as f:
                     lines = f.readlines()
-                    context["dataset_health"] = "".join(lines[:30]) # General Summary
+                    context["dataset_health"] = "".join(lines[:30])  # General Summary
 
                     # Simple keyword matcher for specific queries (with punctuation stripped)
                     clean_query = "".join([c if c.isalnum() or c.isspace() else " " for c in query.lower()])
@@ -110,7 +107,7 @@ class ForensicRAGAgent:
         # 1. Input Validation: Length check (prevents huge prompt injection payloads)
         if not query or len(query.strip()) == 0:
             return "Please submit a non-empty query."
-            
+
         if len(query) > 300:
             return "Safety Alert: Input query exceeds the maximum allowed length (300 characters)."
 
@@ -124,6 +121,7 @@ class ForensicRAGAgent:
         # 2. Context Sanitization: Ensure no sensitive details (like absolute local paths) are sent to LLMs
         def sanitize_context(ctx: Dict[str, Any]) -> Dict[str, Any]:
             import copy
+
             sanitized = copy.deepcopy(ctx)
             # Remove absolute system directories from report lines to prevent leak of path configurations
             cwd = os.getcwd()
@@ -131,8 +129,7 @@ class ForensicRAGAgent:
                 sanitized["dataset_health"] = sanitized["dataset_health"].replace(cwd, ".")
             if "relevant_snippets" in sanitized and isinstance(sanitized["relevant_snippets"], list):
                 sanitized["relevant_snippets"] = [
-                    s.replace(cwd, ".") if isinstance(s, str) else s 
-                    for s in sanitized["relevant_snippets"]
+                    s.replace(cwd, ".") if isinstance(s, str) else s for s in sanitized["relevant_snippets"]
                 ]
             return sanitized
 
@@ -150,7 +147,7 @@ class ForensicRAGAgent:
                 similarities = cosine_similarity(query_vector, self.question_vectors).flatten()
                 best_idx = similarities.argmax()
                 best_score = similarities[best_idx]
-                
+
                 # If match score is high enough (threshold = 0.25), return curated answer
                 if best_score >= 0.25:
                     logger.info(f"Agent matched query semantically with score {best_score:.4f} to idx {best_idx}")
@@ -187,10 +184,7 @@ class ForensicRAGAgent:
             snippets = context.get("relevant_snippets", [])
             if snippets:
                 snippet_text = "\n".join([f"- {s}" for s in snippets if len(s) > 10])
-                return (
-                    f"Here is the retrieved dataset health status details:\n"
-                    f"{snippet_text}"
-                )
+                return f"Here is the retrieved dataset health status details:\n" f"{snippet_text}"
             return "The dataset report indicates no major corruption issues, all files are healthy and sorted."
 
         # 3. Default fallback
@@ -205,8 +199,9 @@ class ForensicRAGAgent:
     def _call_gemini_api(self, query: str, context: Dict[str, Any], api_key: str) -> str:
         try:
             import google.generativeai as genai
+
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel("gemini-pro")
             prompt = (
                 f"You are a professional digital forensics assistant analyzing a SentinelForensicsAI project.\n"
                 f"Your task is to answer the user query based ONLY on the verified context provided below.\n"
@@ -226,6 +221,7 @@ class ForensicRAGAgent:
     def _call_openai_api(self, query: str, context: Dict[str, Any], api_key: str) -> str:
         try:
             import openai
+
             client = openai.OpenAI(api_key=api_key)
             prompt = (
                 f"Your task is to answer the user query based ONLY on the verified context provided below.\n"
@@ -238,9 +234,12 @@ class ForensicRAGAgent:
             completion = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are a professional digital forensics assistant. Do not ignore system rules."},
-                    {"role": "user", "content": prompt}
-                ]
+                    {
+                        "role": "system",
+                        "content": "You are a professional digital forensics assistant. Do not ignore system rules.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
             )
             return completion.choices[0].message.content or "No response from OpenAI."
         except Exception as e:

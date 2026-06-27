@@ -1,6 +1,8 @@
 from typing import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 from app.config.config import settings
 
 # Determine database engine parameters based on dialect
@@ -10,17 +12,14 @@ if settings.DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
 # Create connection pool
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    connect_args=connect_args
-)
+engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Declarative base model
 Base = declarative_base()
+
 
 def get_db() -> Generator:
     """

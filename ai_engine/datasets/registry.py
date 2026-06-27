@@ -1,13 +1,16 @@
-import os
 import json
-from typing import Dict, Any, List, Optional
+import os
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
+
 
 class DatasetMetadata(BaseModel):
     """
     Detailed metadata representation of a digital forensics dataset,
     fully compliant with scientific and research requirements.
     """
+
     name: str
     version: str
     release_year: int
@@ -21,15 +24,17 @@ class DatasetMetadata(BaseModel):
     labels: List[str] = Field(default_factory=list, description="Classification labels (e.g. ['real', 'fake'])")
     classes: List[str] = Field(default_factory=list, description="Specific subclasses or manipulation methods")
     expected_folder_structure: Dict[str, str] = Field(
-        default_factory=dict, 
-        description="Dictionary mapping semantic parts of the dataset to expected directory sub-paths"
+        default_factory=dict,
+        description="Dictionary mapping semantic parts of the dataset to expected directory sub-paths",
     )
     citation: str = Field(description="Academic citation information (BibTeX format)")
+
 
 class DatasetConfig(BaseModel):
     """
     Individual configuration variables for directories and schemas.
     """
+
     dataset_id: str
     raw_video_dir: str
     processed_faces_dir: str
@@ -38,11 +43,13 @@ class DatasetConfig(BaseModel):
     validation_split: float = 0.2
     test_split: float = 0.1
 
+
 class DatasetRegistry:
     """
     Enterprise-level Dataset Registry engine.
     Maintains configurations, versions, validations, and statistics for deepfake benchmarks.
     """
+
     def __init__(self) -> None:
         self.datasets: Dict[str, Dict[str, Any]] = {}
         self.configs: Dict[str, DatasetConfig] = {}
@@ -71,7 +78,7 @@ class DatasetRegistry:
                     expected_folder_structure={
                         "original_sequences": "original_sequences/youtube/c23/videos",
                         "manipulated_sequences": "manipulated_sequences/{manipulation_method}/c23/videos",
-                        "metadata": "metadata.json"
+                        "metadata": "metadata.json",
                     },
                     citation=r"""@inproceedings{roessler2019faceforensics,
   title={Faceforensics++: Learning to detect manipulated facial images},
@@ -79,15 +86,15 @@ class DatasetRegistry:
   booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
   pages={1--11},
   year={2019}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="faceforensics",
                     raw_video_dir="storage/datasets/faceforensics/raw_videos",
                     processed_faces_dir="storage/datasets/faceforensics/face_crops",
                     audio_features_dir="storage/datasets/faceforensics/audio_data",
-                    metadata_csv_path="storage/datasets/faceforensics/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/faceforensics/metadata.csv",
+                ),
             },
             {
                 "id": "celeb-df",
@@ -107,7 +114,7 @@ class DatasetRegistry:
                     expected_folder_structure={
                         "real_videos": "Celeb-real/videos",
                         "fake_videos": "Celeb-synthesis/videos",
-                        "test_list": "List_of_testing_videos.txt"
+                        "test_list": "List_of_testing_videos.txt",
                     },
                     citation=r"""@inproceedings{li2020celeb,
   title={Celeb-df: A large-scale challenging dataset for deepfake forensics},
@@ -115,15 +122,15 @@ class DatasetRegistry:
   booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   pages={3207--3216},
   year={2020}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="celeb-df",
                     raw_video_dir="storage/datasets/celeb-df/raw_videos",
                     processed_faces_dir="storage/datasets/celeb-df/face_crops",
                     audio_features_dir="storage/datasets/celeb-df/audio_data",
-                    metadata_csv_path="storage/datasets/celeb-df/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/celeb-df/metadata.csv",
+                ),
             },
             {
                 "id": "dfdc",
@@ -142,22 +149,22 @@ class DatasetRegistry:
                     classes=["real", "fake"],
                     expected_folder_structure={
                         "dataset_chunks": "dfdc_train_part_*/",
-                        "metadata_file": "metadata.json"
+                        "metadata_file": "metadata.json",
                     },
                     citation=r"""@article{dolhansky2020deepfake,
   title={The deepfake detection challenge (dfdc) dataset},
   author={Dolhansky, Brian and Bitton, Joanna and Pflaum, Ben and Lu, Jiahui and Howes, Russ and Wang, Menglin and Canton Ferrero, Cristian},
   journal={arXiv preprint arXiv:2006.07397},
   year={2020}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="dfdc",
                     raw_video_dir="storage/datasets/dfdc/raw_videos",
                     processed_faces_dir="storage/datasets/dfdc/face_crops",
                     audio_features_dir="storage/datasets/dfdc/audio_data",
-                    metadata_csv_path="storage/datasets/dfdc/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/dfdc/metadata.csv",
+                ),
             },
             {
                 "id": "fakeavceleb",
@@ -173,26 +180,28 @@ class DatasetRegistry:
                     description="Multimodal dataset with deepfake audio and faces corresponding to celebrities.",
                     download_source="https://github.com/DASH-Lab/FakeAVCeleb",
                     labels=["real", "fake"],
-                    classes=["RealVideo-RealAudio", "FakeVideo-RealAudio", "RealVideo-FakeAudio", "FakeVideo-FakeAudio"],
-                    expected_folder_structure={
-                        "raw_clips": "FakeAVCeleb_v1/FakeAVCeleb/",
-                        "meta_csv": "meta.csv"
-                    },
+                    classes=[
+                        "RealVideo-RealAudio",
+                        "FakeVideo-RealAudio",
+                        "RealVideo-FakeAudio",
+                        "FakeVideo-FakeAudio",
+                    ],
+                    expected_folder_structure={"raw_clips": "FakeAVCeleb_v1/FakeAVCeleb/", "meta_csv": "meta.csv"},
                     citation=r"""@inproceedings{khalid2021fakeavceleb,
   title={FakeAVCeleb: a novel audio-video multimodal deepfake dataset},
   author={Khalid, Hasam and Tariq, Shahroz and Kim, Minha and Woo, Simon S},
   booktitle={Proceedings of the 32nd ACM Workshop on Network and Operating Systems Support for Digital Audio and Video},
   pages={15--21},
   year={2021}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="fakeavceleb",
                     raw_video_dir="storage/datasets/fakeavceleb/raw_videos",
                     processed_faces_dir="storage/datasets/fakeavceleb/face_crops",
                     audio_features_dir="storage/datasets/fakeavceleb/audio_data",
-                    metadata_csv_path="storage/datasets/fakeavceleb/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/fakeavceleb/metadata.csv",
+                ),
             },
             {
                 "id": "deeperforensics",
@@ -212,7 +221,7 @@ class DatasetRegistry:
                     expected_folder_structure={
                         "source_videos": "deeperforensics_v1/videos/source/",
                         "manipulated_videos": "deeperforensics_v1/videos/manipulated/",
-                        "meta_json": "meta.json"
+                        "meta_json": "meta.json",
                     },
                     citation=r"""@inproceedings{jiang2020deeperforensics,
   title={Deeperforensics-1.0: A large-scale dataset for real-world face forgery detection},
@@ -220,15 +229,15 @@ class DatasetRegistry:
   booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   pages={2895--2904},
   year={2020}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="deeperforensics",
                     raw_video_dir="storage/datasets/deeperforensics/raw_videos",
                     processed_faces_dir="storage/datasets/deeperforensics/face_crops",
                     audio_features_dir="storage/datasets/deeperforensics/audio_data",
-                    metadata_csv_path="storage/datasets/deeperforensics/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/deeperforensics/metadata.csv",
+                ),
             },
             {
                 "id": "forgerynet",
@@ -248,7 +257,7 @@ class DatasetRegistry:
                     expected_folder_structure={
                         "training_images": "forgerynet_v1/images/train/",
                         "validation_images": "forgerynet_v1/images/val/",
-                        "meta_csv": "train.csv"
+                        "meta_csv": "train.csv",
                     },
                     citation=r"""@inproceedings{he2021forgerynet,
   title={Forgerynet: A versatile benchmark for face forgery detection and localization},
@@ -256,15 +265,15 @@ class DatasetRegistry:
   booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   pages={4360--4369},
   year={2021}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="forgerynet",
                     raw_video_dir="storage/datasets/forgerynet/raw_videos",
                     processed_faces_dir="storage/datasets/forgerynet/face_crops",
                     audio_features_dir="storage/datasets/forgerynet/audio_data",
-                    metadata_csv_path="storage/datasets/forgerynet/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/forgerynet/metadata.csv",
+                ),
             },
             {
                 "id": "wilddeepfake",
@@ -284,7 +293,7 @@ class DatasetRegistry:
                     expected_folder_structure={
                         "real_clips": "real/*.mp4",
                         "fake_clips": "fake/*.mp4",
-                        "metadata": "metadata.csv"
+                        "metadata": "metadata.csv",
                     },
                     citation=r"""@inproceedings{zi2020wilddeepfake,
   title={Wilddeepfake: A challenging real-world dataset for deepfake detection},
@@ -292,15 +301,15 @@ class DatasetRegistry:
   booktitle={Proceedings of the 28th ACM International Conference on Multimedia},
   pages={2382--2390},
   year={2020}
-}"""
+}""",
                 ),
                 "config": DatasetConfig(
                     dataset_id="wilddeepfake",
                     raw_video_dir="storage/datasets/wilddeepfake/raw_videos",
                     processed_faces_dir="storage/datasets/wilddeepfake/face_crops",
                     audio_features_dir="storage/datasets/wilddeepfake/audio_data",
-                    metadata_csv_path="storage/datasets/wilddeepfake/metadata.csv"
-                )
+                    metadata_csv_path="storage/datasets/wilddeepfake/metadata.csv",
+                ),
             },
             {
                 "id": "deepfake_detection",
@@ -317,27 +326,21 @@ class DatasetRegistry:
                     download_source="Local Workspace",
                     labels=["real", "fake"],
                     classes=["real", "fake"],
-                    expected_folder_structure={
-                        "real_videos": "real/",
-                        "fake_videos": "fake/"
-                    },
-                    citation="Local Dataset"
+                    expected_folder_structure={"real_videos": "real/", "fake_videos": "fake/"},
+                    citation="Local Dataset",
                 ),
                 "config": DatasetConfig(
                     dataset_id="deepfake_detection",
                     raw_video_dir="deepfake_detection/data/raw_videos",
                     processed_faces_dir="deepfake_detection/face_crops",
                     audio_features_dir="deepfake_detection/audio_data",
-                    metadata_csv_path="deepfake_detection/data/metadata.csv"
-                )
-            }
+                    metadata_csv_path="deepfake_detection/data/metadata.csv",
+                ),
+            },
         ]
-        
+
         for item in default_benchmarks:
-            self.datasets[item["id"]] = {
-                "metadata": item["meta"],
-                "config": item["config"]
-            }
+            self.datasets[item["id"]] = {"metadata": item["meta"], "config": item["config"]}
             self.configs[item["id"]] = item["config"]
 
     def get_dataset(self, dataset_id: str) -> Optional[Dict[str, Any]]:
@@ -354,10 +357,7 @@ class DatasetRegistry:
         """
         Dynamically register new custom forensic datasets at runtime.
         """
-        self.datasets[dataset_id.lower()] = {
-            "metadata": metadata,
-            "config": config
-        }
+        self.datasets[dataset_id.lower()] = {"metadata": metadata, "config": config}
         self.configs[dataset_id.lower()] = config
 
     def validate_dataset_directories(self, dataset_id: str) -> Dict[str, Any]:
@@ -367,20 +367,18 @@ class DatasetRegistry:
         cfg = self.get_config(dataset_id)
         if not cfg:
             return {"valid": False, "error": f"Dataset '{dataset_id}' not found in registry."}
-            
+
         status = {
             "raw_video_dir_exists": os.path.exists(cfg.raw_video_dir),
             "processed_faces_dir_exists": os.path.exists(cfg.processed_faces_dir),
             "audio_features_dir_exists": os.path.exists(cfg.audio_features_dir),
-            "metadata_csv_exists": os.path.exists(cfg.metadata_csv_path)
+            "metadata_csv_exists": os.path.exists(cfg.metadata_csv_path),
         }
-        
+
         valid = all(status.values())
-        return {
-            "valid": valid,
-            "paths_status": status
-        }
-        
+        return {"valid": valid, "paths_status": status}
+
+
 if __name__ == "__main__":
     registry = DatasetRegistry()
     print("Registered datasets:", list(registry.datasets.keys()))

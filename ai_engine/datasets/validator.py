@@ -1,19 +1,23 @@
-import os
 import csv
-import cv2
 import logging
-from typing import Dict, Any, List, Set, Tuple, Optional
-from ai_engine.datasets.registry import DatasetRegistry, DatasetConfig
-from app.utils.crypto import calculate_sha256
+import os
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import cv2
+
+from ai_engine.datasets.registry import DatasetConfig, DatasetRegistry
 from app.config.config import settings
+from app.utils.crypto import calculate_sha256
 
 logger = logging.getLogger("system")
+
 
 class DatasetValidator:
     """
     Automated Dataset Validator for Deepfake Forensics Benchmarks.
     Checks directory properties, metadata CSV compliance, corruption, format limits, and duplicates.
     """
+
     def __init__(self, registry: Optional[DatasetRegistry] = None) -> None:
         self.registry = registry or DatasetRegistry()
 
@@ -26,30 +30,17 @@ class DatasetValidator:
         """
         cfg = self.registry.get_config(dataset_id)
         meta = self.registry.get_metadata(dataset_id)
-        
+
         if not cfg or not meta:
-            return {
-                "success": False,
-                "error": f"Dataset '{dataset_id}' not found in active registry."
-            }
+            return {"success": False, "error": f"Dataset '{dataset_id}' not found in active registry."}
 
         report = {
             "dataset_id": dataset_id,
             "success": True,
             "errors_found": False,
             "empty_directories": [],
-            "metadata": {
-                "status": "unverified",
-                "total_rows": 0,
-                "invalid_rows": [],
-                "missing_labels": 0
-            },
-            "files": {
-                "missing_videos": [],
-                "corrupt_videos": [],
-                "unsupported_formats": [],
-                "duplicate_files": {}
-            }
+            "metadata": {"status": "unverified", "total_rows": 0, "invalid_rows": [], "missing_labels": 0},
+            "files": {"missing_videos": [], "corrupt_videos": [], "unsupported_formats": [], "duplicate_files": {}},
         }
 
         # Step 1: Check Directories and scan for empty folders
@@ -71,7 +62,7 @@ class DatasetValidator:
             return report
 
         # Track file hashes to find duplicates, and verify rows
-        seen_hashes: Dict[str, str] = {} # sha256 -> relative_path
+        seen_hashes: Dict[str, str] = {}  # sha256 -> relative_path
         unique_videos: Set[str] = set()
 
         try:
@@ -87,45 +78,51 @@ class DatasetValidator:
 
                 headers = reader.fieldnames or []
                 required_cols = {"video_path", "label"}
-                
+
                 # Check for incorrect annotations structure / invalid headers
                 if not required_cols.issubset(set(headers)):
                     report["success"] = False
                     report["errors_found"] = True
-                    report["metadata"]["status"] = f"Invalid CSV schema. Missing columns: {required_cols - set(headers)}"
+                    report["metadata"][
+                        "status"
+                    ] = f"Invalid CSV schema. Missing columns: {required_cols - set(headers)}"
                     return report
 
                 report["metadata"]["status"] = "valid_headers"
-                
-                for idx, row in enumerate(reader, start=2): # 1-indexed plus header row
+
+                for idx, row in enumerate(reader, start=2):  # 1-indexed plus header row
                     report["metadata"]["total_rows"] += 1
-                    
+
                     video_rel_path = row.get("video_path")
                     label = row.get("label")
-                    
+
                     # 2a. Validate label
                     if not label:
                         report["metadata"]["missing_labels"] += 1
                         report["errors_found"] = True
                         report["metadata"]["invalid_rows"].append({"row": idx, "reason": "Missing label column value"})
                         continue
-                    
+
                     if label not in meta.labels:
                         report["errors_found"] = True
-                        report["metadata"]["invalid_rows"].append({
-                            "row": idx, 
-                            "reason": f"Label '{label}' is not valid for this dataset. Allowed: {meta.labels}"
-                        })
+                        report["metadata"]["invalid_rows"].append(
+                            {
+                                "row": idx,
+                                "reason": f"Label '{label}' is not valid for this dataset. Allowed: {meta.labels}",
+                            }
+                        )
                         continue
-                        
+
                     # 2b. Validate video path references
                     if not video_rel_path:
                         report["errors_found"] = True
-                        report["metadata"]["invalid_rows"].append({"row": idx, "reason": "Missing video_path column value"})
+                        report["metadata"]["invalid_rows"].append(
+                            {"row": idx, "reason": "Missing video_path column value"}
+                        )
                         continue
-                        
+
                     video_abs_path = os.path.join(cfg.raw_video_dir, video_rel_path)
-                    
+
                     # 3. Check for Missing videos
                     if not os.path.exists(video_abs_path):
                         report["files"]["missing_videos"].append(video_rel_path)
@@ -143,7 +140,7 @@ class DatasetValidator:
                             seen_hashes[file_hash] = video_rel_path
                     except Exception as e:
                         logger.error(f"Failed hashing file: {video_abs_path} - {e}")
-                        
+
                     # 5. Check for Unsupported Formats
                     ext = video_rel_path.split(".")[-1].lower() if "." in video_rel_path else ""
                     allowed_exts = settings.get_allowed_extensions_list()
@@ -160,11 +157,11 @@ class DatasetValidator:
                             report["errors_found"] = True
                             cap.release()
                             continue
-                        
+
                         fps = cap.get(cv2.CAP_PROP_FPS)
                         frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
                         cap.release()
-                        
+
                         if fps <= 0 or frames <= 0:
                             report["files"]["corrupt_videos"].append(video_rel_path)
                             report["errors_found"] = True
@@ -173,7 +170,7 @@ class DatasetValidator:
                         report["files"]["corrupt_videos"].append(video_rel_path)
                         report["errors_found"] = True
                         continue
-                        
+
         except Exception as e:
             report["success"] = False
             report["errors_found"] = True

@@ -1,10 +1,12 @@
-import os
-import numpy as np
-import librosa
 import logging
+import os
 from typing import Tuple
 
+import librosa
+import numpy as np
+
 logger = logging.getLogger("system")
+
 
 class AudioFeatureExtractor:
     """
@@ -13,13 +15,14 @@ class AudioFeatureExtractor:
     Handles silent or audio-missing videos gracefully by generating zero-filled baselines
     to prevent multimodal fusion pipeline failures.
     """
+
     def __init__(
-        self, 
-        sample_rate: int = 16000, 
-        n_mels: int = 128, 
-        n_fft: int = 2048, 
+        self,
+        sample_rate: int = 16000,
+        n_mels: int = 128,
+        n_fft: int = 2048,
         hop_length: int = 512,
-        target_time_steps: int = 300
+        target_time_steps: int = 300,
     ) -> None:
         self.sample_rate = sample_rate
         self.n_mels = n_mels
@@ -33,7 +36,7 @@ class AudioFeatureExtractor:
         If video is silent or audio fails to extract, returns a zero-filled placeholder.
         """
         mel_db = None
-        
+
         # 1. Attempt loading audio using librosa (uses audioread/ffmpeg backends)
         try:
             # Load up to 10 seconds of audio
@@ -41,19 +44,16 @@ class AudioFeatureExtractor:
             if len(y) > 0:
                 # Compute Mel Spectrogram
                 mel_spec = librosa.feature.melspectrogram(
-                    y=y, 
-                    sr=self.sample_rate, 
-                    n_fft=self.n_fft, 
-                    hop_length=self.hop_length, 
-                    n_mels=self.n_mels
+                    y=y, sr=self.sample_rate, n_fft=self.n_fft, hop_length=self.hop_length, n_mels=self.n_mels
                 )
                 # Convert power spec to Decibel units (dB)
                 mel_db = librosa.power_to_db(mel_spec, ref=np.max)
         except Exception as e:
             # Log warning and fall back to zero-filled array
             logger.warning(
-                "AudioFeatureExtractor: Audio loading failed or video is silent for %s (%s). Generating zero-spec fallback.", 
-                os.path.basename(video_path), e
+                "AudioFeatureExtractor: Audio loading failed or video is silent for %s (%s). Generating zero-spec fallback.",
+                os.path.basename(video_path),
+                e,
             )
 
         # 2. Handle zero-filled fallback or shape standardization (padding/cropping)
@@ -67,10 +67,10 @@ class AudioFeatureExtractor:
                 # Pad with minimum dB value (silence indicator)
                 pad_width = self.target_time_steps - current_steps
                 min_db = np.min(mel_db) if mel_db.size > 0 else -80.0
-                mel_db = np.pad(mel_db, ((0, 0), (0, pad_width)), mode='constant', constant_values=min_db)
+                mel_db = np.pad(mel_db, ((0, 0), (0, pad_width)), mode="constant", constant_values=min_db)
             elif current_steps > self.target_time_steps:
                 # Crop to target sequence length
-                mel_db = mel_db[:, :self.target_time_steps]
+                mel_db = mel_db[:, : self.target_time_steps]
 
         return mel_db
 

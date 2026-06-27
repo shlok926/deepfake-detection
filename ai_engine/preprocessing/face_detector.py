@@ -1,9 +1,11 @@
-import os
-import cv2
 import logging
-from typing import List, Tuple, Optional
+import os
+from typing import List, Optional, Tuple
+
+import cv2
 
 logger = logging.getLogger("system")
+
 
 class FaceDetector:
     """
@@ -13,6 +15,7 @@ class FaceDetector:
     - Primary: MTCNN (via facenet-pytorch) if available for research-grade accuracy.
     - Fallback: OpenCV Haar Cascades for guaranteed offline reliability and speed.
     """
+
     def __init__(self, fallback_to_haar: bool = True) -> None:
         self.use_mtcnn = False
         self.mtcnn = None
@@ -20,8 +23,9 @@ class FaceDetector:
 
         # Attempt to initialize MTCNN
         try:
-            from facenet_pytorch import MTCNN
             import torch
+            from facenet_pytorch import MTCNN
+
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             self.mtcnn = MTCNN(keep_all=True, device=device, select_largest=True)
             self.use_mtcnn = True
@@ -76,12 +80,12 @@ class FaceDetector:
             return []
 
     def detect_and_crop_faces(
-        self, 
-        video_path: str, 
-        output_dir: str, 
-        target_size: Tuple[int, int] = (224, 224), 
+        self,
+        video_path: str,
+        output_dir: str,
+        target_size: Tuple[int, int] = (224, 224),
         max_frames: int = 15,
-        frame_stride: int = 10
+        frame_stride: int = 10,
     ) -> List[str]:
         """
         Reads a video file, extracts faces at stride intervals, and saves cropped images.
@@ -108,15 +112,15 @@ class FaceDetector:
             # Frame stride downsampling
             if frame_idx % frame_stride == 0:
                 boxes = self.detect_faces_in_frame(frame)
-                
+
                 for face_idx, (x, y, w, h) in enumerate(boxes):
                     # Height & Width boundary checks
                     height, width, _ = frame.shape
-                    
+
                     # Apply a small bounding box margin enlargement for facial analysis (15% padding)
                     pad_w = int(w * 0.15)
                     pad_h = int(h * 0.15)
-                    
+
                     x1 = max(0, x - pad_w)
                     y1 = max(0, y - pad_h)
                     x2 = min(width, x + w + pad_w)
@@ -133,11 +137,11 @@ class FaceDetector:
                     # Save crop to disk
                     crop_filename = f"frame_{frame_idx:04d}_face{face_idx}.jpg"
                     crop_filepath = os.path.join(output_dir, crop_filename)
-                    
+
                     cv2.imwrite(crop_filepath, resized_face)
                     saved_crop_paths.append(crop_filepath)
                     saved_count += 1
-                    
+
                     if saved_count >= max_frames:
                         break
 

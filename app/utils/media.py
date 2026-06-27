@@ -1,9 +1,12 @@
 import os
+from typing import Any, Dict, List
+
 import cv2
 import librosa
 from PIL import Image
-from typing import Dict, Any, List
-from app.utils.exceptions import VideoCorruptedException, AudioMissingException, InvalidInputException
+
+from app.utils.exceptions import AudioMissingException, InvalidInputException, VideoCorruptedException
+
 
 def is_safe_path(target_path: str, base_directory: str) -> bool:
     """
@@ -15,6 +18,7 @@ def is_safe_path(target_path: str, base_directory: str) -> bool:
     abs_target = os.path.abspath(target_path)
     return abs_target.startswith(abs_base)
 
+
 def validate_video_integrity(video_path: str) -> Dict[str, Any]:
     """
     Video Utility.
@@ -23,21 +27,23 @@ def validate_video_integrity(video_path: str) -> Dict[str, Any]:
     """
     if not os.path.exists(video_path):
         raise FileNotFoundError(f"Video file not found: {video_path}")
-        
+
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise VideoCorruptedException(video_path, "OpenCV failed to open video file capture stream.")
-        
+
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
+
     cap.release()
-    
+
     if fps <= 0 or frame_count <= 0 or width <= 0 or height <= 0:
-        raise VideoCorruptedException(video_path, "Video metadata properties contain invalid zero or negative dimensions/frames.")
-        
+        raise VideoCorruptedException(
+            video_path, "Video metadata properties contain invalid zero or negative dimensions/frames."
+        )
+
     duration = frame_count / fps
     return {
         "valid": True,
@@ -45,8 +51,9 @@ def validate_video_integrity(video_path: str) -> Dict[str, Any]:
         "height": height,
         "fps": fps,
         "frame_count": int(frame_count),
-        "duration_seconds": round(duration, 2)
+        "duration_seconds": round(duration, 2),
     }
+
 
 def validate_audio_integrity(audio_path: str) -> Dict[str, Any]:
     """
@@ -56,18 +63,15 @@ def validate_audio_integrity(audio_path: str) -> Dict[str, Any]:
     """
     if not os.path.exists(audio_path):
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
-        
+
     try:
-        y, sr = librosa.load(audio_path, sr=None, duration=1.0) # load 1 second to test
+        y, sr = librosa.load(audio_path, sr=None, duration=1.0)  # load 1 second to test
         duration = librosa.get_duration(y=y, sr=sr)
     except Exception as e:
         raise AudioMissingException(f"Audio format cannot be decoded or is missing: {e}")
-        
-    return {
-        "valid": True,
-        "sample_rate": sr,
-        "duration_seconds": round(duration, 2)
-    }
+
+    return {"valid": True, "sample_rate": sr, "duration_seconds": round(duration, 2)}
+
 
 def validate_image_integrity(image_path: str) -> Dict[str, Any]:
     """
@@ -76,18 +80,13 @@ def validate_image_integrity(image_path: str) -> Dict[str, Any]:
     """
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image crop not found: {image_path}")
-        
+
     try:
         with Image.open(image_path) as img:
             width, height = img.size
             img_format = img.format
-            img.verify() # verify integrity
+            img.verify()  # verify integrity
     except Exception as e:
         raise InvalidInputException("image_file", image_path, f"Image is corrupted or unreadable. PIL error: {e}")
-        
-    return {
-        "valid": True,
-        "width": width,
-        "height": height,
-        "format": img_format
-    }
+
+    return {"valid": True, "width": width, "height": height, "format": img_format}

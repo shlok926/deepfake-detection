@@ -1,12 +1,15 @@
-import os
 import csv
+import logging
+import os
+from typing import Any, Dict, List, Optional
+
 import cv2
 import librosa
-import logging
-from typing import Dict, Any, List, Optional
+
 from ai_engine.datasets.registry import DatasetRegistry
 
 logger = logging.getLogger("system")
+
 
 class DatasetStatsAnalyzer:
     """
@@ -18,6 +21,7 @@ class DatasetStatsAnalyzer:
     - Audio availability checks
     - MLOps class imbalance warnings
     """
+
     def __init__(self, registry: Optional[DatasetRegistry] = None) -> None:
         self.registry = registry or DatasetRegistry()
 
@@ -55,11 +59,8 @@ class DatasetStatsAnalyzer:
             "resolution_distribution": {},
             "fps_distribution": {},
             "codec_distribution": {},
-            "audio_availability": {
-                "with_audio": 0,
-                "without_audio": 0
-            },
-            "class_imbalance_report": {}
+            "audio_availability": {"with_audio": 0, "without_audio": 0},
+            "class_imbalance_report": {},
         }
 
         total_duration = 0.0
@@ -94,13 +95,15 @@ class DatasetStatsAnalyzer:
                         fps = round(cap.get(cv2.CAP_PROP_FPS), 2)
                         frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
                         fourcc = int(cap.get(cv2.CAP_PROP_FOURCC))
-                        
+
                         cap.release()
 
                         # Resolutions tracking
                         if width > 0 and height > 0:
                             res_str = f"{width}x{height}"
-                            stats["resolution_distribution"][res_str] = stats["resolution_distribution"].get(res_str, 0) + 1
+                            stats["resolution_distribution"][res_str] = (
+                                stats["resolution_distribution"].get(res_str, 0) + 1
+                            )
 
                         # FPS tracking
                         if fps > 0:
@@ -146,7 +149,7 @@ class DatasetStatsAnalyzer:
         # Class imbalance calculation
         real = stats["real_count"]
         fake = stats["fake_count"]
-        
+
         imbalance_ratio = 1.0
         major_class = "balanced"
         minor_class = "balanced"
@@ -171,7 +174,7 @@ class DatasetStatsAnalyzer:
             "imbalance_ratio": imbalance_ratio,
             "major_class": major_class,
             "minor_class": minor_class,
-            "recommended_action": action
+            "recommended_action": action,
         }
 
         return stats

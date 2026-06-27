@@ -1,13 +1,16 @@
-import torch
 from datetime import datetime
+
+import torch
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+from app.config.config import settings
 from app.database.connection import get_db
 from app.schemas.api_schemas import HealthResponse, VersionResponse
-from app.config.config import settings
 
 router = APIRouter(tags=["Diagnostics"])
+
 
 @router.get("/health", response_model=HealthResponse)
 def get_health(db: Session = Depends(get_db)):
@@ -29,16 +32,13 @@ def get_health(db: Session = Depends(get_db)):
         database_connected=database_connected,
         cuda_available=cuda_available,
         gpu_devices_count=gpu_devices_count,
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
     )
+
 
 @router.get("/version", response_model=VersionResponse)
 def get_version():
     """
     Returns platform versioning info.
     """
-    return VersionResponse(
-        version="1.0.0",
-        api_prefix=settings.API_VERSION,
-        environment=settings.ENV
-    )
+    return VersionResponse(version="1.0.0", api_prefix=settings.API_VERSION, environment=settings.ENV)

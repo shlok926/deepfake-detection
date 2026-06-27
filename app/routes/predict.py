@@ -1,26 +1,26 @@
 import os
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
+from app.config.config import settings
 from app.database.connection import get_db
-from app.database.models import VideoModel, PredictionModel
+from app.database.models import PredictionModel, VideoModel
 from app.schemas.api_schemas import PredictRequest, PredictResponse
 from app.services.inference import InferenceService
-from app.config.config import settings
 
 router = APIRouter(prefix="/predict", tags=["Deepfake Engine"])
 
+
 @router.post("", response_model=PredictResponse)
-def execute_predict(
-    payload: PredictRequest,
-    db: Session = Depends(get_db)
-):
+def execute_predict(payload: PredictRequest, db: Session = Depends(get_db)):
     """
     Submits an uploaded video for AI Deepfake detection and modal feature extraction.
     """
     # 1. Fetch video from database by video_id
     video = db.query(VideoModel).filter(VideoModel.id == payload.video_id).first()
-    
+
     video_path = None
     if not video:
         # Sandbox/Demo Fallback: if database record is missing, use first sample in real raw videos folder
@@ -29,7 +29,7 @@ def execute_predict(
             samples = [os.path.join(sample_dir, f) for f in os.listdir(sample_dir) if f.lower().endswith(".mp4")]
             if samples:
                 video_path = samples[0]
-        
+
         if not video_path:
             raise HTTPException(status_code=404, detail="Video record not found in database or raw datasets.")
     else:
@@ -50,7 +50,7 @@ def execute_predict(
             model_version="1.0.0",
             prediction_score=inference_res["prediction_score"],
             is_fake=inference_res["is_fake"],
-            details_json=str(inference_res["details"])
+            details_json=str(inference_res["details"]),
         )
         db.add(prediction_db)
         db.commit()
@@ -70,5 +70,5 @@ def execute_predict(
         prediction_score=inference_res["prediction_score"],
         is_fake=inference_res["is_fake"],
         explanation=inference_res["details"],
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
     )

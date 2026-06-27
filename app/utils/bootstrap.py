@@ -1,8 +1,10 @@
-import os
 import logging
+import os
+
 from app.config.config import settings
 
 logger = logging.getLogger("bootstrap")
+
 
 def bootstrap_directories() -> None:
     """
@@ -23,7 +25,7 @@ def bootstrap_directories() -> None:
         "monitoring/prometheus",
         "monitoring/grafana",
         "mlops/dvc",
-        "mlops/mlflow"
+        "mlops/mlflow",
     ]
 
     print("=== Platform Initialization: Directory Bootstrapping ===")
@@ -37,6 +39,7 @@ def bootstrap_directories() -> None:
         else:
             print(f"[BOOTSTRAP] Directory already exists: {directory}")
     print("=======================================================\n")
+
 
 if __name__ == "__main__":
     bootstrap_directories()

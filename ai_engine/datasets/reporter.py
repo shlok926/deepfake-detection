@@ -1,20 +1,23 @@
-import os
 import json
 import logging
+import os
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from ai_engine.datasets.registry import DatasetRegistry
-from ai_engine.datasets.validator import DatasetValidator
-from ai_engine.datasets.statistics import DatasetStatsAnalyzer
+from typing import Any, Dict, List, Optional
+
 from ai_engine.datasets.duplicates import VideoDuplicateDetector
+from ai_engine.datasets.registry import DatasetRegistry
+from ai_engine.datasets.statistics import DatasetStatsAnalyzer
+from ai_engine.datasets.validator import DatasetValidator
 
 logger = logging.getLogger("system")
 
+
 class DatasetReporter:
     """
-    Consolidates validation runs, video stats, duplicate analysis, 
+    Consolidates validation runs, video stats, duplicate analysis,
     and historical version metadata to output unified Markdown audit reports.
     """
+
     def __init__(self, registry: Optional[DatasetRegistry] = None) -> None:
         self.registry = registry or DatasetRegistry()
         self.validator = DatasetValidator(self.registry)
@@ -48,6 +51,7 @@ class DatasetReporter:
         if os.path.exists(cfg.metadata_csv_path):
             try:
                 import csv
+
                 with open(cfg.metadata_csv_path, mode="r", encoding="utf-8") as f:
                     reader = csv.DictReader(f)
                     for row in reader:
@@ -67,16 +71,17 @@ class DatasetReporter:
                 "name": meta.name,
                 "version": meta.version,
                 "modality": meta.modality,
-                "download_source": meta.download_source
+                "download_source": meta.download_source,
             },
             "validation": {
-                "valid_headers": val_report.get("metadata", {}).get("status") == "valid_headers" or val_report.get("metadata", {}).get("status") == "all_checks_passed",
+                "valid_headers": val_report.get("metadata", {}).get("status") == "valid_headers"
+                or val_report.get("metadata", {}).get("status") == "all_checks_passed",
                 "missing_files_count": len(val_report.get("files", {}).get("missing_videos", [])),
                 "corrupt_files_count": len(val_report.get("files", {}).get("corrupt_videos", [])),
                 "unsupported_formats_count": len(val_report.get("files", {}).get("unsupported_formats", [])),
                 "empty_directories": val_report.get("empty_directories", []),
                 "invalid_rows_count": len(val_report.get("metadata", {}).get("invalid_rows", [])),
-                "missing_labels": val_report.get("metadata", {}).get("missing_labels", 0)
+                "missing_labels": val_report.get("metadata", {}).get("missing_labels", 0),
             },
             "statistics": {
                 "total_videos": stats_report.get("total_videos", 0),
@@ -88,13 +93,13 @@ class DatasetReporter:
                 "fps_distribution": stats_report.get("fps_distribution", {}),
                 "codec_distribution": stats_report.get("codec_distribution", {}),
                 "audio_availability": stats_report.get("audio_availability", {}),
-                "imbalance_report": stats_report.get("class_imbalance_report", {})
+                "imbalance_report": stats_report.get("class_imbalance_report", {}),
             },
             "duplicates": {
                 "total_scanned": dup_report.get("total_files_scanned", 0),
                 "duplicate_groups_found": dup_report.get("duplicate_groups_found", 0),
-                "duplicate_items_count": len(dup_report.get("duplicates", []))
-            }
+                "duplicate_items_count": len(dup_report.get("duplicates", [])),
+            },
         }
 
         # 5. Write JSON report
@@ -106,12 +111,7 @@ class DatasetReporter:
         md_path = os.path.join(report_dir, f"dataset_{dataset_id}_health.md")
         self._write_markdown_file(md_path, report_data)
 
-        return {
-            "success": True,
-            "json_report_path": json_path,
-            "markdown_report_path": md_path,
-            "data": report_data
-        }
+        return {"success": True, "json_report_path": json_path, "markdown_report_path": md_path, "data": report_data}
 
     def _write_markdown_file(self, filepath: str, data: Dict[str, Any]) -> None:
         """
