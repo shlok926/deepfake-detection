@@ -54,7 +54,7 @@ st.markdown('<div class="main-title">🛡️ SentinelForensicsAI</div>', unsafe_
 st.markdown('<div class="subtitle">Multimodal Deepfake Forensic Investigation & Explainable AI Dashboard</div>', unsafe_allow_html=True)
 
 # ----------------- SIDEBAR -----------------
-st.sidebar.image("https://img.icons8.com/nolan/128/security-shield.png", width=80)
+st.sidebar.markdown("# 🛡️ SentinelAI")
 st.sidebar.title("System Status")
 st.sidebar.markdown("---")
 st.sidebar.success("🤖 Late Fusion Model: Loaded")
