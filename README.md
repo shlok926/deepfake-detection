@@ -49,25 +49,73 @@
 
 ```mermaid
 graph TD
-    Client[Web UI / Browser Extension / API Clients] -->|HTTPS Requests| Gateway[FastAPI Enterprise Layer]
-    Gateway -->|Security Middleware| Auth[JWT & Payload Security Checks]
-    Gateway -->|Database Ops| DB[(SQL Database / SQLite Cache)]
-    Gateway -->|Task Handlers| AI[AI Digital Media Forensics Engine]
+    %% Define Styles
+    classDef client fill:#2c3e50,stroke:#34495e,stroke-width:2px,color:#fff;
+    classDef ui fill:#16a085,stroke:#1abc9c,stroke-width:2px,color:#fff;
+    classDef gateway fill:#2980b9,stroke:#3498db,stroke-width:2px,color:#fff;
+    classDef core fill:#d35400,stroke:#e67e22,stroke-width:2px,color:#fff;
+    classDef rag fill:#8e44ad,stroke:#9b59b6,stroke-width:2px,color:#fff;
+    classDef db fill:#27ae60,stroke:#2ecc71,stroke-width:2px,color:#fff;
+
+    %% Nodes
+    Client[User / Forensic Analyst]:::client
     
-    subgraph AI Engine [AI Digital Media Forensics Engine]
+    subgraph UI [Streamlit Forensic Workstation UI]
         direction TB
-        V[Video Forensics: ResNet-18 Face CNN]
-        A[Audio Forensics: Mel-Spectrogram 2D CNN]
-        M[Metadata Auditing Module]
-        X[Explainable AI Layer: Grad-CAM / Visual Heatmaps]
-        
-        V --> Fusion[Late Fusion Classifier]
-        A --> Fusion
-        M --> Fusion
-        Fusion --> Predict[Forensic Report API]
+        Tab1[Analysis Hub: Upload & Grad-CAM Visualization]
+        Tab2[Dataset & Performance Registry Dashboard]
+        Tab3[Interactive Forensic RAG Chat Interface]
     end
-    
-    Gateway -->|Prometheus Metrics| Monitor[Grafana / Prometheus Dashboard]
+    class UI ui;
+
+    subgraph Gateway [FastAPI Gateway & Security Middleware]
+        direction TB
+        RoutePredict[/predict endpoint]
+        RouteAgent[/agent/query endpoint]
+        Middleware[Input Validation & Prompt Shield]
+    end
+    class Gateway gateway;
+
+    subgraph Core [Multimodal Late Fusion Engine]
+        direction TB
+        subgraph Video [Video Branch]
+            V1[OpenCV Frame & MTCNN Face Cropping] --> V2[ResNet-18 Deep Feature Extractor]
+        end
+        subgraph Audio [Audio Branch]
+            A1[Librosa Mel-Spectrogram Extraction] --> A2[2D CNN Audio Feature Extractor]
+        end
+        Video --> Fusion[Late Fusion Concatenation Layer]
+        Audio --> Fusion
+        Fusion --> Classifier[BCE Sigmoid Classifier - Threshold 0.2]
+        Classifier --> XAI[Grad-CAM Heatmap Visualizer]
+    end
+    class Core core;
+
+    subgraph RAG [Offline Forensic RAG Agent]
+        direction TB
+        KB[200+ Curated Offline Knowledge Base Queries]
+        Vec[TF-IDF Vectorizer & Cosine Similarity]
+        Fallback[Dynamic File Parser: SQLite / metadata.csv]
+        Vec --> KB
+        Vec --> Fallback
+    end
+    class RAG rag;
+
+    subgraph Storage [Data & Storage Layer]
+        direction TB
+        SQLite[(SQLite DB: Users, Prediction Logs, Reports)]
+        Disk[(Local Disk Cache: face_crops/, audio_data/, checkpoints/)]
+    end
+    class Storage db;
+
+    %% Connections
+    Client -->|Upload Media / Ask Query| UI
+    UI -->|API POST Request| Gateway
+    Gateway -->|Verify & Filter| Middleware
+    Middleware -->|Process Video/Audio| Core
+    Middleware -->|Execute Query| RAG
+    Core -->|Log Results & Read Weights| Storage
+    RAG -->|Query Stats & Metrics| Storage
 ```
 
 ---
