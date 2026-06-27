@@ -14,52 +14,59 @@ import torchvision.transforms as T
 
 # Page Configuration
 st.set_page_config(
-    page_title="SentinelForensicsAI - Deepfake Detection System",
+    page_title="SentinelForensicsAI",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling (Dark Cyberpunk Theme)
+# Custom Styling (Professional Cybersecurity Theme)
 st.markdown("""
 <style>
-    .reportview-container {
-        background: #0f1115;
-    }
     .main-title {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        color: #00ffcc;
+        font-family: 'Inter', sans-serif;
+        color: #58a6ff;
         text-align: center;
-        font-weight: 700;
-        font-size: 2.8rem;
-        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 2.2rem;
+        margin-bottom: 2px;
     }
     .subtitle {
         text-align: center;
-        color: #8892b0;
-        font-size: 1.1rem;
-        margin-bottom: 25px;
+        color: #8b949e;
+        font-size: 0.95rem;
+        margin-bottom: 30px;
     }
-    .metric-card {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
+    .status-active {
+        color: #3fb950;
+        font-weight: bold;
+    }
+    .status-info {
+        color: #58a6ff;
+        font-weight: bold;
+    }
+    div.stButton > button {
+        background-color: #21262d !important;
+        color: #c9d1d9 !important;
+        border: 1px solid #30363d !important;
+    }
+    div.stButton > button:hover {
+        border-color: #58a6ff !important;
+        color: #58a6ff !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">🛡️ SentinelForensicsAI</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">SentinelForensicsAI</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Multimodal Deepfake Forensic Investigation & Explainable AI Dashboard</div>', unsafe_allow_html=True)
 
 # ----------------- SIDEBAR -----------------
-st.sidebar.markdown("# 🛡️ SentinelAI")
-st.sidebar.title("System Status")
+st.sidebar.markdown("### SentinelAI")
 st.sidebar.markdown("---")
-st.sidebar.success("🤖 Late Fusion Model: Loaded")
-st.sidebar.success("📊 Feature Cache: Active")
-st.sidebar.info("🧠 RAG Agent: Online")
+st.sidebar.markdown("**System Status:**")
+st.sidebar.markdown("Model Weights: <span class=\"status-active\">Active</span>", unsafe_allow_html=True)
+st.sidebar.markdown("Feature Cache: <span class=\"status-active\">Active</span>", unsafe_allow_html=True)
+st.sidebar.markdown("Forensic RAG: <span class=\"status-info\">Online</span>", unsafe_allow_html=True)
 
 # Load model for GradCAM once to prevent reloading overhead
 @st.cache_resource
@@ -79,11 +86,11 @@ inference_service = InferenceService()
 rag_agent = ForensicRAGAgent()
 
 # ----------------- TABS -----------------
-tab1, tab2, tab3 = st.tabs(["🔍 Analysis Hub", "💬 Forensic RAG Agent", "📊 Dataset & Performance"])
+tab1, tab2, tab3 = st.tabs(["Analysis Hub", "Forensic RAG Agent", "Dataset & Performance"])
 
 # ----------------- TAB 1: ANALYSIS HUB -----------------
 with tab1:
-    st.header("Video Analysis & Visual Forgery Detection")
+    st.subheader("Video Analysis & Visual Forgery Detection")
     st.write("Upload a raw media file to execute multimodal deepfake evaluation and generate activation overlays.")
     
     col1, col2 = st.columns([1, 1])
@@ -101,8 +108,8 @@ with tab1:
             
             st.video(temp_path)
             
-            if st.button("🚀 Run Forensic Inference", use_container_width=True):
-                with st.spinner("Processing video (extracting facial crops, vocal tracks, and generating Grad-CAM mapping)..."):
+            if st.button("Run Forensic Inference", use_container_width=True):
+                with st.spinner("Processing video features (extracting face crops, audio logs, and generating Grad-CAM overlays)..."):
                     try:
                         # 1. Run live prediction
                         res = inference_service.predict_video(temp_path)
@@ -114,7 +121,6 @@ with tab1:
                         cap = cv2.VideoCapture(temp_path)
                         success, frame = cap.read()
                         if success:
-                            faces_boxes = gradcam_obj.model.video_extractor.resnet # wait, let's use detector
                             from ai_engine.preprocessing.face_detector import FaceDetector
                             detector = FaceDetector()
                             boxes = detector.detect_faces_in_frame(frame)
@@ -170,33 +176,33 @@ with tab1:
             is_fake = res["is_fake"]
             explanation = res["details"]
             
-            st.subheader("Analysis Verdict")
+            st.markdown("### Analysis Verdict")
             if is_fake:
-                st.error(f"🚨 VERDICT: FAKE DEEPFAKE DETECTED (Score: {score*100:.1f}%)")
+                st.error(f"VERDICT: DEEPFAKE DETECTED (Confidence: {score*100:.1f}%)")
             else:
-                st.success(f"✅ VERDICT: REAL MEDIA DETECTED (Score: {score*100:.1f}%)")
+                st.success(f"VERDICT: REAL MEDIA DETECTED (Confidence: {(1-score)*100:.1f}%)")
                 
             st.metric(label="Manipulated Probability", value=f"{score*100:.2f}%")
             st.progress(score)
             
-            st.markdown("### Modal Probabilities:")
-            st.write(f"- **Visual Forgery Probability**: {explanation['visual_probability']*100:.1f}%")
-            st.write(f"- **Acoustic Manipulation Probability**: {explanation['vocal_probability']*100:.1f}%")
+            st.markdown("### Modality Probability Breakdown:")
+            st.write(f"- Visual Forgery Probability: {explanation['visual_probability']*100:.1f}%")
+            st.write(f"- Acoustic Forgery Probability: {explanation['vocal_probability']*100:.1f}%")
             
             if "gradcam_overlay" in st.session_state and os.path.exists(st.session_state["gradcam_overlay"]):
-                st.markdown("### 🔍 Explainable AI: Grad-CAM Face Heatmap")
-                st.image(st.session_state["gradcam_overlay"], caption="Grad-CAM highlight: Red areas represent highest visual anomaly gradients.", use_container_width=True)
+                st.markdown("### Explainable AI: Grad-CAM Face Heatmap")
+                st.image(st.session_state["gradcam_overlay"], caption="Grad-CAM highlights regional anomalies targeted by the model.", use_container_width=True)
         else:
             st.info("Run forensic inference to display results.")
 
 # ----------------- TAB 2: RAG AGENT Chat -----------------
 with tab2:
-    st.header("💬 Forensic AI Agent Chatroom")
-    st.write("Ask the RAG agent about the dataset statistics, health reports, duplicate count, or model metrics.")
+    st.subheader("Forensic AI Agent Chatroom")
+    st.write("Query the agent regarding dataset statistics, health reports, duplicate count, or model metrics.")
     
     if "messages" not in st.session_state:
         st.session_state["messages"] = [
-            {"role": "assistant", "content": "Hello! I am your Forensic RAG Assistant. You can query me regarding model performance metrics, dataset health reports, or video databases."}
+            {"role": "assistant", "content": "Hello. I am your Forensic RAG Assistant. You can query me regarding model performance metrics, dataset health reports, or video databases."}
         ]
         
     for msg in st.session_state["messages"]:
@@ -209,7 +215,7 @@ with tab2:
         with st.chat_message("user"):
             st.write(user_query)
             
-        with st.spinner("RAG Agent retrieving facts & thinking..."):
+        with st.spinner("Retrieving facts..."):
             ans = rag_agent.answer_query(user_query)
             
         st.session_state["messages"].append({"role": "assistant", "content": ans})
@@ -218,12 +224,12 @@ with tab2:
 
 # ----------------- TAB 3: DATASET & PERFORMANCE -----------------
 with tab3:
-    st.header("📊 Evaluation Curves and Dataset Diagnostics")
+    st.subheader("Evaluation Curves and Dataset Diagnostics")
     
     col_a, col_b = st.columns(2)
     
     with col_a:
-        st.subheader("Confusion Matrix")
+        st.write("**Confusion Matrix**")
         cm_path = "results/confusion_matrix.png"
         if os.path.exists(cm_path):
             st.image(cm_path, caption="True vs. Predicted spoofing label counts", use_container_width=True)
@@ -231,7 +237,7 @@ with tab3:
             st.info("Confusion matrix plot not found at results/confusion_matrix.png.")
             
     with col_b:
-        st.subheader("ROC Curve (Separation Power)")
+        st.write("**ROC Curve (Separation Power)**")
         roc_path = "results/roc_curve.png"
         if os.path.exists(roc_path):
             st.image(roc_path, caption="True Positive Rate vs False Positive Rate Curve (AUC = 0.95)", use_container_width=True)
@@ -239,7 +245,7 @@ with tab3:
             st.info("ROC-AUC plot not found at results/roc_curve.png.")
 
     st.markdown("---")
-    st.subheader("📋 Dataset Health Audit Findings")
+    st.write("**Dataset Health Audit Findings**")
     health_md_path = "storage/reports/dataset_deepfake_detection_health.md"
     if os.path.exists(health_md_path):
         with open(health_md_path, "r", encoding="utf-8") as f:
