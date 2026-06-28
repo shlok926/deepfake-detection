@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,13 @@ try:
 except Exception as e:
     system_logger.critical(f"Failed to bootstrap database schemas: {e}")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    system_logger.info(f"Platform successfully started in [{settings.ENV}] environment.")
+    yield
+
+
 # 2. Setup ASGI App
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -35,6 +43,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
+    lifespan=lifespan,
 )
 
 # 3. Enable CORS
@@ -56,12 +65,6 @@ if settings.PROMETHEUS_METRICS_ENABLED:
     HTTP_REQUEST_DURATION = Histogram(
         "http_request_duration_seconds", "HTTP request processing latency", ["method", "endpoint"]
     )
-
-
-# 5. Bootstrap directories on startup
-@app.on_event("startup")
-def startup_event():
-    system_logger.info(f"Platform successfully started in [{settings.ENV}] environment.")
 
 
 # 6. Global Request Logging and Metrics Middleware
