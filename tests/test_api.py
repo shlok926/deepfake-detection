@@ -29,7 +29,11 @@ def test_version_endpoint():
     assert json_data["version"] == "1.0.0"
     assert json_data["api_prefix"] == "v1"
 
-def test_predict_endpoint_validation():
+from app.database.connection import SessionLocal
+from app.database.models import VideoModel
+from app.services.inference import InferenceService
+
+def test_predict_endpoint_validation(monkeypatch, tmp_path):
     """
     Assert predictions post parameters respect schema limits.
     """
@@ -37,6 +41,26 @@ def test_predict_endpoint_validation():
     response = client.post("/predict", json={})
     assert response.status_code == 422
     
+    # Mock inference service so we don't need real models/videos
+    def mock_predict(self, *args, **kwargs):
+        return {
+            "prediction_score": 0.85,
+            "is_fake": True,
+            "details": {"multimodal_fusion": "Test mock explanation"}
+        }
+    monkeypatch.setattr(InferenceService, "predict_video", mock_predict)
+
+    # Insert dummy video into DB
+    dummy_file = tmp_path / "dummy.mp4"
+    dummy_file.write_text("dummy")
+    
+    db = SessionLocal()
+    if not db.query(VideoModel).filter(VideoModel.id == 42).first():
+        video = VideoModel(id=42, file_path=str(dummy_file), file_name="dummy.mp4", file_size_mb=1.0, sha256_hash="dummyhash42")
+        db.add(video)
+        db.commit()
+    db.close()
+
     # Valid payload structure
     response = client.post("/predict", json={"video_id": 42, "model_type": "multimodal"})
     assert response.status_code == 200
