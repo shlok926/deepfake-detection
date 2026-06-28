@@ -18,7 +18,10 @@ from app.utils.logging import get_request_logger, get_system_logger, setup_logge
 system_logger = get_system_logger()
 request_logger = get_request_logger()
 
-# 1. Initialize DB Tables (SQLite / Postgres)
+# 1. Bootstrap directories on startup
+bootstrap_directories()
+
+# 2. Initialize DB Tables (SQLite / Postgres)
 try:
     Base.metadata.create_all(bind=engine)
     system_logger.info("Database schemas initialized / verified.")
@@ -58,7 +61,6 @@ if settings.PROMETHEUS_METRICS_ENABLED:
 # 5. Bootstrap directories on startup
 @app.on_event("startup")
 def startup_event():
-    bootstrap_directories()
     system_logger.info(f"Platform successfully started in [{settings.ENV}] environment.")
 
 

@@ -22,6 +22,7 @@ def train_model(
     Saves the best model weights.
     """
     os.makedirs("models", exist_ok=True)
+    os.makedirs("storage/datasets", exist_ok=True)
 
     if not os.path.exists(processed_csv):
         raise FileNotFoundError(
